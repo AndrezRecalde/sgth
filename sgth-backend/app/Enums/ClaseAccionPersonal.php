@@ -456,11 +456,27 @@ enum ClaseAccionPersonal: string
      * 4.2 y 6.5; fase 6.1). La de la causal, si la tiene, es más precisa —dice
      * la letra del Art. 47 o del 28— y la reemplaza. Null en las clases que no
      * se formalizan con este formulario.
+     *
+     * El nombramiento hace falta porque hay causales compartidas entre
+     * regímenes (fase 4.1c): lo pasa para que la causal elija su norma.
      */
-    public function baseLegal(?SubtipoMovimientoPersonal $causal = null): ?string
-    {
-        if ($causal?->baseLegal()) {
-            return $causal->baseLegal();
+    public function baseLegal(
+        ?SubtipoMovimientoPersonal $causal = null,
+        ?TipoNombramiento $nombramiento = null
+    ): ?string {
+        if ($causal?->baseLegal($nombramiento)) {
+            return $causal->baseLegal($nombramiento);
+        }
+
+        /*
+        | La tabla de abajo es la de la LOSEP, y a una autoridad electa la rigen
+        | la Constitución y el COOTAD. Sus cinco causales de cesación ya traen
+        | la suya, así que aquí solo llega un acto sin causal —uno registrado
+        | antes de la fase 4.1—: se queda sin base legal impresa, que es
+        | preferible a imprimirle una ley que no le toca.
+        */
+        if ($nombramiento === TipoNombramiento::ELECCION_POPULAR && $this === self::CESACION) {
+            return null;
         }
 
         return match ($this) {
@@ -480,6 +496,20 @@ enum ClaseAccionPersonal: string
             self::ENCARGO                   => 'LOSEP Art. 127; Reglamento a la LOSEP Art. 271',
             self::SANCION                   => 'LOSEP Art. 43; Reglamento a la LOSEP Art. 87',
             self::CESACION                  => 'LOSEP Art. 47',
+
+            /*
+            | Las tres de la autoridad electa (fase 4.1c). Antes devolvían null
+            | y su constancia salía sin base legal, que es el único documento
+            | que Talento Humano firma sin decir de dónde nace el acto.
+            |
+            | El Art. 51 dice que el Viceprefecto subroga «en los casos
+            | expresamente señalados en la ley»; el caso es el Art. 52 núm. 1,
+            | y es ese el que se cita.
+            */
+            self::INICIO_PERIODO            => 'Constitución Art. 252; COOTAD Art. 49',
+            self::LICENCIA_CONSEJO          => 'COOTAD Art. 47 s',
+            self::ASUNCION_DEFINITIVA       => 'COOTAD Art. 52 núm. 1',
+
             default                         => null,
         };
     }

@@ -160,9 +160,19 @@ enum SubtipoMovimientoPersonal: string
     /**
      * Base legal de la causal, para el documento y la ayuda del formulario
      * (diseño, 4.3). Null en las que no son de cesación.
+     *
+     * El régimen importa en las causales compartidas (fase 4.1c): la renuncia
+     * y el fallecimiento cierran igual el vínculo de un servidor LOSEP, el
+     * período de una autoridad electa y un contrato civil, pero cada uno se
+     * rige por su propia norma. Sin el nombramiento se devuelve la de la LOSEP,
+     * que es el caso general.
      */
-    public function baseLegal(): ?string
+    public function baseLegal(?TipoNombramiento $nombramiento = null): ?string
     {
+        if ($propia = $this->baseLegalPorNombramiento()[$nombramiento?->value] ?? null) {
+            return $propia;
+        }
+
         return match ($this) {
             self::RENUNCIA                   => 'LOSEP Art. 47 a; Reglamento Art. 102',
             self::REMOCION                   => 'LOSEP Art. 47 e; Reglamento Art. 105',
@@ -180,6 +190,11 @@ enum SubtipoMovimientoPersonal: string
             self::VISTO_BUENO                => 'Código del Trabajo Art. 172',
             self::REVOCATORIA_DEL_MANDATO    => 'Constitución Art. 105',
             self::REMOCION_POR_EL_CONSEJO    => 'COOTAD Arts. 333–336',
+            // El período se acaba solo, el día que decía la credencial: no hay
+            // artículo que citar, como no lo hay en el plazo de un contrato.
+            // Sin esta línea caía en la de su clase, que es la LOSEP Art. 47.
+            self::FIN_DEL_PERIODO            => 'El período para el que fue electa la autoridad',
+            self::ELECCION                   => 'Constitución Art. 252; COOTAD Art. 49',
             // El contrato es ley para las partes, y solo lo invalida su
             // consentimiento mutuo o una causa legal (Código Civil Art. 1561).
             self::CONTRATO_FINALIZADO        => 'El plazo del contrato',
@@ -205,6 +220,43 @@ enum SubtipoMovimientoPersonal: string
             self::SUSPENSION_SIN_REMUNERACION => 'LOSEP Art. 43 d',
             self::DESIGNACION_DEL_CONSEJO     => 'COOTAD, Art. 47 literal n',
             default                          => null,
+        };
+    }
+
+    /**
+     * La base legal de esta causal en los regímenes que no son el de la LOSEP,
+     * por el valor del nombramiento (fase 4.1c).
+     *
+     * Solo la renuncia y el fallecimiento la necesitan, porque son las dos
+     * únicas causales que la elección popular y el contrato civil comparten con
+     * el régimen LOSEP. Hasta el 2026-11-26 la renuncia de la Prefecta imprimía
+     * «LOSEP Art. 47 a; Reglamento Art. 102» y su fallecimiento «LOSEP Art.
+     * 47 l»: una ley que no la rige, en un documento que firma Talento Humano.
+     *
+     * El COOTAD no lista las causales por las que se pierde la dignidad: las
+     * trata todas como **ausencia definitiva**, y de ahí salen las dos normas
+     * que se citan —el Consejo la declara por resolución y notifica al CNE
+     * (Art. 336, inciso final), y el Viceprefecto asume hasta terminar el
+     * período (Art. 52 núm. 1)—. La revocatoria y la remoción sí tienen la suya
+     * y no pasan por aquí.
+     *
+     * @return array<string, string>
+     */
+    public function baseLegalPorNombramiento(): array
+    {
+        $ausenciaDefinitiva = 'COOTAD Arts. 52 núm. 1 y 336';
+
+        return match ($this) {
+            self::RENUNCIA => [
+                TipoNombramiento::ELECCION_POPULAR->value => $ausenciaDefinitiva,
+            ],
+            self::FALLECIMIENTO => [
+                TipoNombramiento::ELECCION_POPULAR->value => $ausenciaDefinitiva,
+                // El contrato civil no cesa por la LOSEP: se acaba porque se
+                // murió quien lo iba a cumplir (fase 4.2).
+                TipoNombramiento::SERVICIOS_PROFESIONALES->value => 'El contrato de servicios profesionales',
+            ],
+            default => [],
         };
     }
 

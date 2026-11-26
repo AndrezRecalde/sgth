@@ -62,7 +62,27 @@ export function claseDisponible(clase: ClaseDelCatalogo, vinculo: VinculoDelServ
   return incluye(clase.nombramientos_elegibles, vinculo.tipoNombramiento)
 }
 
-/** Las causales de la clase que aplican al nombramiento vigente. */
+/**
+ * La base legal de la causal para este nombramiento (fase 4.1c).
+ *
+ * `base_legal` es la del régimen LOSEP, que es el caso general. La renuncia y
+ * el fallecimiento también cierran el período de una autoridad electa y un
+ * contrato civil, y ahí rige otra norma: el backend manda esas variantes en
+ * `base_legal_por_nombramiento`.
+ */
+function baseLegalDe(causal: CausalDelCatalogo, tipoNombramiento?: string | null): string | null {
+  const propia = tipoNombramiento
+    ? causal.base_legal_por_nombramiento.find((b) => b.nombramiento === tipoNombramiento)
+    : undefined
+
+  return propia?.base_legal ?? causal.base_legal
+}
+
+/**
+ * Las causales de la clase que aplican al nombramiento vigente, cada una con la
+ * base legal de ese régimen: así quien las muestra no tiene que volver a
+ * preguntarse de qué régimen era el servidor.
+ */
 export function causalesDisponibles(
   clase: ClaseDelCatalogo | undefined,
   tipoNombramiento?: string | null,
@@ -70,7 +90,9 @@ export function causalesDisponibles(
   if (!clase) return []
   if (!tipoNombramiento) return clase.causales
 
-  return clase.causales.filter((c) => incluye(c.nombramientos_elegibles, tipoNombramiento))
+  return clase.causales
+    .filter((c) => incluye(c.nombramientos_elegibles, tipoNombramiento))
+    .map((c) => ({ ...c, base_legal: baseLegalDe(c, tipoNombramiento) }))
 }
 
 /** Las clases que se le pueden registrar a este servidor, opcionalmente de una sola familia. */

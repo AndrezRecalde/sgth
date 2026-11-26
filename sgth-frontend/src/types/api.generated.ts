@@ -570,6 +570,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * El consolidado en Excel. Era un CSV sin título ni período y con la
+         *     cédula expuesta a perder el cero; ver `ConsolidadoPermisosExport`
+         */
         get: operations["sso.ausentismo.excel"];
         put?: never;
         post?: never;
@@ -586,6 +590,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * El consolidado en PDF, en el estilo de los documentos institucionales
+         *     (2026-11-24): A4 apaisado como los demás listados, membrete y pie fijos
+         *     en cada hoja y los títulos de columna repetidos si pasa a otra
+         */
         get: operations["sso.ausentismo.pdf"];
         put?: never;
         post?: never;
@@ -2328,6 +2337,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * El consolidado en Excel. Era un CSV sin título ni período y con la
+         *     cédula expuesta a perder el cero; ver `ConsolidadoPermisosExport`
+         */
         get: operations["asistencia.consolidado.excel"];
         put?: never;
         post?: never;
@@ -2344,6 +2357,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * El consolidado en PDF, en el estilo de los documentos institucionales
+         *     (2026-11-24): A4 apaisado como los demás listados, membrete y pie fijos
+         *     en cada hoja y los títulos de columna repetidos si pasa a otra
+         */
         get: operations["asistencia.consolidado.pdf"];
         put?: never;
         post?: never;
@@ -5112,6 +5130,29 @@ export interface paths {
             cookie?: never;
         };
         get: operations["viaticos.comprobante.generar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/{identificador}/orden-anticipo/generar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La orden de pago del anticipo
+         * @description A diferencia de los otros tres, este documento no lo abre cualquiera que
+         *     vea el viático: lo firma quien lo genera, así que solo lo emite quien
+         *     opera los viáticos. Si lo abriera el propio viajero, quedaría sellado
+         *     como el funcionario que preparó su pago.
+         */
+        get: operations["viaticos.orden-anticipo.generar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -10672,7 +10713,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/asistencia/vacaciones/{id}": {
+    "/v1/asistencia/vacaciones/{id}/registrar": {
         parameters: {
             query?: never;
             header?: never;
@@ -10680,8 +10721,13 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["vacacion.update"];
-        post?: never;
+        put?: never;
+        /**
+         * Talento Humano registra la solicitud que recibe firmada en ventanilla
+         * @description Sin cuerpo: ya no se manda un estado a elegir. El único camino hacia
+         *     adelante es registrarla, y el único hacia atrás, anularla con motivo.
+         */
+        post: operations["asistencia.vacaciones.registrar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10698,7 +10744,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Anula una pendiente, o una aprobada que aún no comienza
+         * Anula una autorizada, o una registrada que aún no comienza
          * @description El mensaje dice cuántos días volvieron al saldo: es lo que quien anula
          *     necesita comprobar, y no se ve en la fila de la solicitud.
          */
@@ -11861,8 +11907,19 @@ export interface components {
             codigo: components["schemas"]["SubtipoMovimientoPersonal"];
             /** @enum {string} */
             etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Elección" | "Designación del Consejo Provincial" | "Terminación por mutuo acuerdo" | "Terminación anticipada según el contrato" | "Renuncia (desahucio)" | "Acuerdo de las partes" | "Conclusión de la obra o del servicio" | "Despido intempestivo" | "Muerte o incapacidad permanente" | "Caso fortuito o fuerza mayor" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo)" | "Revalorización" | "Reclasificación" | "Ubicación";
-            /** @enum {string|null} */
-            base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | "COOTAD, Art. 47 literal n" | null;
+            /**
+             * @description La del régimen LOSEP, que es el caso general, y las de los
+             *     regímenes que citan otra norma por la misma causal (fase 4.1c):
+             *     el formulario elige con el nombramiento del servidor buscado. Va como lista y no como mapa porque Scramble no sabe leer un
+             *     arreglo con claves de cadena: lo tipa como una tupla posicional
+             *     y el tipo que llega al frontend queda mintiendo. Y dentro de un
+             *     `array_map` tampoco ve la forma, así que va anotada.
+             */
+            base_legal: string | null;
+            base_legal_por_nombramiento: {
+                nombramiento: components["schemas"]["TipoNombramiento"];
+                base_legal: string;
+            }[];
             nombramientos_elegibles: [
                 components["schemas"]["TipoNombramiento"]
             ] | [
@@ -11973,9 +12030,8 @@ export interface components {
             /**
              * @description La que el formulario propone para la explicación del documento;
              *     con causal, manda la de la causal (fase 6.1).
-             * @enum {string|null}
              */
-            base_legal: "LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19" | "LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227" | "LOSEP Art. 32" | "LOSEP Art. 46" | "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191" | "LOSEP Arts. 35 y 36" | "LOSEP Art. 37; Reglamento a la LOSEP Art. 69" | "LOSEP Arts. 61 y 62; Reglamento a la LOSEP Arts. 163 y 173" | "LOSEP Arts. 39 y 40" | "LOSEP Art. 30" | "LOSEP Art. 31" | "LOSEP Art. 28" | "LOSEP Art. 126; Reglamento a la LOSEP Art. 270" | "LOSEP Art. 127; Reglamento a la LOSEP Art. 271" | "LOSEP Art. 43; Reglamento a la LOSEP Art. 87" | "LOSEP Art. 47" | "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | "COOTAD, Art. 47 literal n" | null;
+            base_legal: string | null;
             pide_situacion_propuesta: boolean;
             pide_periodo: boolean;
             pide_institucion_destino: boolean;
@@ -13998,6 +14054,10 @@ export interface components {
              *     dice así en vez de dejar el hueco (diseño, 4.5).
              */
             causal_etiqueta: string | null | "No indicada (histórico)";
+            /**
+             * @description Con el régimen del instrumento: la renuncia de una autoridad no
+             *     cita la LOSEP (fase 4.1c).
+             */
             causal_base_legal: string;
             /**
              * @description La terminación de una ocasional protegida por embarazo o
@@ -17065,6 +17125,12 @@ export interface components {
             dias_solicitados: number;
             /** @enum {string} */
             tipo_dias: "habiles" | "calendario";
+            /**
+             * @description 300 y no 500: es lo que entra en la caja de alto fijo de la
+             *     solicitud impresa —unos 100 caracteres por renglón, tres
+             *     renglones, 14 mm— sin que la hoja cambie de forma. Si se mueve
+             *     este tope hay que mover el alto en `vacacion-pdf.blade.php`.
+             */
             observacion?: string | null;
             /**
              * @description Sin `unidad_administrativa_id`: la solicitud lleva siempre la
@@ -18274,12 +18340,6 @@ export interface components {
             usuario_ti?: string;
             roles?: string[];
         };
-        /** UpdateVacacionRequest */
-        UpdateVacacionRequest: {
-            /** @enum {string} */
-            estado: "aprobada" | "rechazada";
-            observacion?: string | null;
-        };
         /** UsuarioAutenticadoResource */
         UsuarioAutenticadoResource: {
             id: number;
@@ -18433,6 +18493,8 @@ export interface components {
             coeficiente_exterior: string | null;
             motivo_rechazo: string | null;
             partida_presupuestaria_id: number | null;
+            /** Format: date-time */
+            fecha_anticipo: string | null;
         };
         /**
          * VigenciaComunicado
@@ -20147,11 +20209,10 @@ export interface operations {
         responses: {
             200: {
                 headers: {
-                    "Transfer-Encoding": "chunked";
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/csv; charset=UTF-8": string;
+                    "application/json": unknown;
                 };
             };
             401: components["responses"]["AuthenticationException"];
@@ -24999,11 +25060,10 @@ export interface operations {
         responses: {
             200: {
                 headers: {
-                    "Transfer-Encoding": "chunked";
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/csv; charset=UTF-8": string;
+                    "application/json": unknown;
                 };
             };
             401: components["responses"]["AuthenticationException"];
@@ -33089,6 +33149,30 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "viaticos.orden-anticipo.generar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identificador: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "inspecciones.index": {
@@ -47734,6 +47818,7 @@ export interface operations {
         parameters: {
             query?: {
                 equipo?: boolean;
+                estado?: "autorizada" | "registrada" | "gozada" | "anulada";
                 per_page?: number;
             };
             header?: never;
@@ -47938,7 +48023,7 @@ export interface operations {
             404: components["responses"]["ModelNotFoundException"];
         };
     };
-    "vacacion.update": {
+    "asistencia.vacaciones.registrar": {
         parameters: {
             query?: never;
             header?: never;
@@ -47947,12 +48032,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateVacacionRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
+            /**
+             * @description El impreso llega con esas dos casillas en blanco: se llenan a mano
+             *     aquí, en la ventanilla. Viajan en `meta` para que quien atiende no
+             *     tenga que ir a buscarlas a otra pantalla con el papel en la mano.
+             */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -47960,15 +48046,20 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        mensaje: string;
+                        /** @constant */
+                        mensaje: "Solicitud registrada por Talento Humano.";
                         datos: components["schemas"]["Vacacion"];
-                        meta: null;
+                        meta: {
+                            anotar: {
+                                se_descuenta_de: string;
+                                saldo_restante: number;
+                            };
+                        };
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "asistencia.vacaciones.anular": {
@@ -48351,6 +48442,8 @@ export interface operations {
                 "application/json": {
                     numero_resolucion: string;
                     partida_presupuestaria_id: number;
+                    /** Format: date-time */
+                    fecha_anticipo: string;
                 };
             };
         };

@@ -3424,6 +3424,7 @@
         "/v1/sso/ausentismo/exportar-excel": {
             "get": {
                 "operationId": "sso.ausentismo.excel",
+                "summary": "El consolidado en Excel. Era un CSV sin t\u00edtulo ni per\u00edodo y con la\nc\u00e9dula expuesta a perder el cero; ver `ConsolidadoPermisosExport`",
                 "tags": [
                     "AusentismoSso"
                 ],
@@ -3431,21 +3432,8 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "text/csv; charset=UTF-8": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "headers": {
-                            "Transfer-Encoding": {
-                                "required": true,
-                                "schema": {
-                                    "type": "string",
-                                    "enum": [
-                                        "chunked"
-                                    ]
-                                }
+                            "application/json": {
+                                "schema": {}
                             }
                         }
                     },
@@ -3458,6 +3446,7 @@
         "/v1/sso/ausentismo/exportar-pdf": {
             "get": {
                 "operationId": "sso.ausentismo.pdf",
+                "summary": "El consolidado en PDF, en el estilo de los documentos institucionales\n(2026-11-24): A4 apaisado como los dem\u00e1s listados, membrete y pie fijos\nen cada hoja y los t\u00edtulos de columna repetidos si pasa a otra",
                 "tags": [
                     "AusentismoSso"
                 ],
@@ -14619,6 +14608,7 @@
         "/v1/asistencia/consolidado-permisos/exportar-excel": {
             "get": {
                 "operationId": "asistencia.consolidado.excel",
+                "summary": "El consolidado en Excel. Era un CSV sin t\u00edtulo ni per\u00edodo y con la\nc\u00e9dula expuesta a perder el cero; ver `ConsolidadoPermisosExport`",
                 "tags": [
                     "ConsolidadoPermiso"
                 ],
@@ -14626,21 +14616,8 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "text/csv; charset=UTF-8": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "headers": {
-                            "Transfer-Encoding": {
-                                "required": true,
-                                "schema": {
-                                    "type": "string",
-                                    "enum": [
-                                        "chunked"
-                                    ]
-                                }
+                            "application/json": {
+                                "schema": {}
                             }
                         }
                     },
@@ -14653,6 +14630,7 @@
         "/v1/asistencia/consolidado-permisos/exportar-pdf": {
             "get": {
                 "operationId": "asistencia.consolidado.pdf",
+                "summary": "El consolidado en PDF, en el estilo de los documentos institucionales\n(2026-11-24): A4 apaisado como los dem\u00e1s listados, membrete y pie fijos\nen cada hoja y los t\u00edtulos de columna repetidos si pasa a otra",
                 "tags": [
                     "ConsolidadoPermiso"
                 ],
@@ -34010,6 +33988,51 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/{identificador}/orden-anticipo/generar": {
+            "get": {
+                "operationId": "viaticos.orden-anticipo.generar",
+                "description": "A diferencia de los otros tres, este documento no lo abre cualquiera que\nvea el vi\u00e1tico: lo firma quien lo genera, as\u00ed que solo lo emite quien\nopera los vi\u00e1ticos. Si lo abriera el propio viajero, quedar\u00eda sellado\ncomo el funcionario que prepar\u00f3 su pago.",
+                "summary": "La orden de pago del anticipo",
+                "tags": [
+                    "InformeViatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "identificador",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -69278,6 +69301,19 @@
                         }
                     },
                     {
+                        "name": "estado",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "autorizada",
+                                "registrada",
+                                "gozada",
+                                "anulada"
+                            ]
+                        }
+                    },
+                    {
                         "name": "per_page",
                         "in": "query",
                         "schema": {
@@ -69764,9 +69800,11 @@
                 }
             }
         },
-        "/v1/asistencia/vacaciones/{id}": {
-            "put": {
-                "operationId": "vacacion.update",
+        "/v1/asistencia/vacaciones/{id}/registrar": {
+            "post": {
+                "operationId": "asistencia.vacaciones.registrar",
+                "description": "Sin cuerpo: ya no se manda un estado a elegir. El \u00fanico camino hacia\nadelante es registrarla, y el \u00fanico hacia atr\u00e1s, anularla con motivo.",
+                "summary": "Talento Humano registra la solicitud que recibe firmada en ventanilla",
                 "tags": [
                     "Vacacion"
                 ],
@@ -69780,19 +69818,9 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateVacacionRequest"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "El impreso llega con esas dos casillas en blanco: se llenan a mano\naqu\u00ed, en la ventanilla. Viajan en `meta` para que quien atiende no\ntenga que ir a buscarlas a otra pantalla con el papel en la mano.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -69802,13 +69830,34 @@
                                             "type": "boolean"
                                         },
                                         "mensaje": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "const": "Solicitud registrada por Talento Humano."
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/Vacacion"
                                         },
                                         "meta": {
-                                            "type": "null"
+                                            "type": "object",
+                                            "properties": {
+                                                "anotar": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "se_descuenta_de": {
+                                                            "type": "string"
+                                                        },
+                                                        "saldo_restante": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "se_descuenta_de",
+                                                        "saldo_restante"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "anotar"
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -69826,9 +69875,6 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -69837,7 +69883,7 @@
             "post": {
                 "operationId": "asistencia.vacaciones.anular",
                 "description": "El mensaje dice cu\u00e1ntos d\u00edas volvieron al saldo: es lo que quien anula\nnecesita comprobar, y no se ve en la fila de la solicitud.",
-                "summary": "Anula una pendiente, o una aprobada que a\u00fan no comienza",
+                "summary": "Anula una autorizada, o una registrada que a\u00fan no comienza",
                 "tags": [
                     "Vacacion"
                 ],
@@ -70739,11 +70785,16 @@
                                     },
                                     "partida_presupuestaria_id": {
                                         "type": "integer"
+                                    },
+                                    "fecha_anticipo": {
+                                        "type": "string",
+                                        "format": "date-time"
                                     }
                                 },
                                 "required": [
                                     "numero_resolucion",
-                                    "partida_presupuestaria_id"
+                                    "partida_presupuestaria_id",
+                                    "fecha_anticipo"
                                 ]
                             }
                         }
@@ -73182,7 +73233,13 @@
                                     "nombre": {
                                         "type": "string"
                                     },
+                                    "segundo_nombre": {
+                                        "type": "string"
+                                    },
                                     "apellido": {
+                                        "type": "string"
+                                    },
+                                    "segundo_apellido": {
                                         "type": "string"
                                     },
                                     "puesto": {
@@ -73210,7 +73267,9 @@
                                 },
                                 "required": [
                                     "nombre",
+                                    "segundo_nombre",
                                     "apellido",
+                                    "segundo_apellido",
                                     "puesto"
                                 ]
                             }
@@ -74946,47 +75005,25 @@
                             "string",
                             "null"
                         ],
-                        "enum": [
-                            "LOSEP Art. 47 a; Reglamento Art. 102",
-                            "LOSEP Art. 47 e; Reglamento Art. 105",
-                            "LOSEP Art. 17 b.5",
-                            "Reglamento a la LOSEP Art. 146 a",
-                            "Reglamento a la LOSEP Art. 146 f",
-                            "Reglamento a la LOSEP Art. 146 b",
-                            "Reglamento a la LOSEP Art. 146 g",
-                            "LOSEP Arts. 47 f y 48",
-                            "LOSEP Art. 47 j",
-                            "LOSEP Art. 47 i y k; Mandato Constituyente 2",
-                            "LOSEP Art. 47 b",
-                            "LOSEP Art. 47 d",
-                            "LOSEP Art. 47 l",
-                            "C\u00f3digo del Trabajo Art. 172",
-                            "Constituci\u00f3n Art. 105",
-                            "COOTAD Arts. 333\u2013336",
-                            "El plazo del contrato",
-                            "C\u00f3digo Civil Art. 1561",
-                            "La cl\u00e1usula de terminaci\u00f3n del contrato",
-                            "C\u00f3digo del Trabajo, Arts. 184 y 185",
-                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 2",
-                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 3",
-                            "C\u00f3digo del Trabajo, Art. 15",
-                            "C\u00f3digo del Trabajo, Arts. 185 y 188",
-                            "C\u00f3digo del Trabajo, Art. 216; Mandato Constituyente 2",
-                            "Mandato Constituyente 2, art. 8",
-                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 5",
-                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 6",
-                            "LOSEP Art. 28 a",
-                            "LOSEP Art. 28 b",
-                            "LOSEP Art. 28 c",
-                            "LOSEP Art. 28 d",
-                            "LOSEP Art. 28 e",
-                            "LOSEP Art. 28 f",
-                            "LOSEP Art. 43 b",
-                            "LOSEP Art. 43 c",
-                            "LOSEP Art. 43 d",
-                            "COOTAD, Art. 47 literal n",
-                            null
-                        ]
+                        "description": "La del r\u00e9gimen LOSEP, que es el caso general, y las de los\nreg\u00edmenes que citan otra norma por la misma causal (fase 4.1c):\nel formulario elige con el nombramiento del servidor buscado. Va como lista y no como mapa porque Scramble no sabe leer un\narreglo con claves de cadena: lo tipa como una tupla posicional\ny el tipo que llega al frontend queda mintiendo. Y dentro de un\n`array_map` tampoco ve la forma, as\u00ed que va anotada."
+                    },
+                    "base_legal_por_nombramiento": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "nombramiento": {
+                                    "$ref": "#/components/schemas/TipoNombramiento"
+                                },
+                                "base_legal": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "nombramiento",
+                                "base_legal"
+                            ]
+                        }
                     },
                     "nombramientos_elegibles": {
                         "anyOf": [
@@ -75095,6 +75132,7 @@
                     "codigo",
                     "etiqueta",
                     "base_legal",
+                    "base_legal_por_nombramiento",
                     "nombramientos_elegibles",
                     "dictamen_medico_por_defecto"
                 ],
@@ -75455,64 +75493,7 @@
                             "string",
                             "null"
                         ],
-                        "description": "La que el formulario propone para la explicaci\u00f3n del documento;\ncon causal, manda la de la causal (fase 6.1).",
-                        "enum": [
-                            "LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19",
-                            "LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227",
-                            "LOSEP Art. 32",
-                            "LOSEP Art. 46",
-                            "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191",
-                            "LOSEP Arts. 35 y 36",
-                            "LOSEP Art. 37; Reglamento a la LOSEP Art. 69",
-                            "LOSEP Arts. 61 y 62; Reglamento a la LOSEP Arts. 163 y 173",
-                            "LOSEP Arts. 39 y 40",
-                            "LOSEP Art. 30",
-                            "LOSEP Art. 31",
-                            "LOSEP Art. 28",
-                            "LOSEP Art. 126; Reglamento a la LOSEP Art. 270",
-                            "LOSEP Art. 127; Reglamento a la LOSEP Art. 271",
-                            "LOSEP Art. 43; Reglamento a la LOSEP Art. 87",
-                            "LOSEP Art. 47",
-                            "LOSEP Art. 47 a; Reglamento Art. 102",
-                            "LOSEP Art. 47 e; Reglamento Art. 105",
-                            "LOSEP Art. 17 b.5",
-                            "Reglamento a la LOSEP Art. 146 a",
-                            "Reglamento a la LOSEP Art. 146 f",
-                            "Reglamento a la LOSEP Art. 146 b",
-                            "Reglamento a la LOSEP Art. 146 g",
-                            "LOSEP Arts. 47 f y 48",
-                            "LOSEP Art. 47 j",
-                            "LOSEP Art. 47 i y k; Mandato Constituyente 2",
-                            "LOSEP Art. 47 b",
-                            "LOSEP Art. 47 d",
-                            "LOSEP Art. 47 l",
-                            "C\u00f3digo del Trabajo Art. 172",
-                            "Constituci\u00f3n Art. 105",
-                            "COOTAD Arts. 333\u2013336",
-                            "El plazo del contrato",
-                            "C\u00f3digo Civil Art. 1561",
-                            "La cl\u00e1usula de terminaci\u00f3n del contrato",
-                            "C\u00f3digo del Trabajo, Arts. 184 y 185",
-                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 2",
-                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 3",
-                            "C\u00f3digo del Trabajo, Art. 15",
-                            "C\u00f3digo del Trabajo, Arts. 185 y 188",
-                            "C\u00f3digo del Trabajo, Art. 216; Mandato Constituyente 2",
-                            "Mandato Constituyente 2, art. 8",
-                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 5",
-                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 6",
-                            "LOSEP Art. 28 a",
-                            "LOSEP Art. 28 b",
-                            "LOSEP Art. 28 c",
-                            "LOSEP Art. 28 d",
-                            "LOSEP Art. 28 e",
-                            "LOSEP Art. 28 f",
-                            "LOSEP Art. 43 b",
-                            "LOSEP Art. 43 c",
-                            "LOSEP Art. 43 d",
-                            "COOTAD, Art. 47 literal n",
-                            null
-                        ]
+                        "description": "La que el formulario propone para la explicaci\u00f3n del documento;\ncon causal, manda la de la causal (fase 6.1)."
                     },
                     "pide_situacion_propuesta": {
                         "type": "boolean"
@@ -83251,7 +83232,8 @@
                         ]
                     },
                     "causal_base_legal": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Con el r\u00e9gimen del instrumento: la renuncia de una autoridad no\ncita la LOSEP (fase 4.1c)."
                     },
                     "aviso_proteccion": {
                         "type": [
@@ -94136,7 +94118,8 @@
                             "string",
                             "null"
                         ],
-                        "maxLength": 500
+                        "description": "300 y no 500: es lo que entra en la caja de alto fijo de la\nsolicitud impresa \u2014unos 100 caracteres por rengl\u00f3n, tres\nrenglones, 14 mm\u2014 sin que la hoja cambie de forma. Si se mueve\neste tope hay que mover el alto en `vacacion-pdf.blade.php`.",
+                        "maxLength": 300
                     },
                     "persona_reemplaza_id": {
                         "type": [
@@ -98495,29 +98478,6 @@
                 },
                 "title": "UpdateUsuarioRequest"
             },
-            "UpdateVacacionRequest": {
-                "type": "object",
-                "properties": {
-                    "estado": {
-                        "type": "string",
-                        "enum": [
-                            "aprobada",
-                            "rechazada"
-                        ]
-                    },
-                    "observacion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 500
-                    }
-                },
-                "required": [
-                    "estado"
-                ],
-                "title": "UpdateVacacionRequest"
-            },
             "UsuarioAutenticadoResource": {
                 "type": "object",
                 "properties": {
@@ -99077,6 +99037,13 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "fecha_anticipo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -99103,7 +99070,8 @@
                     "noches",
                     "coeficiente_exterior",
                     "motivo_rechazo",
-                    "partida_presupuestaria_id"
+                    "partida_presupuestaria_id",
+                    "fecha_anticipo"
                 ],
                 "title": "Viatico"
             },

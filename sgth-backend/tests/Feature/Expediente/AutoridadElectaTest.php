@@ -271,6 +271,77 @@ test('el cese de la autoridad tiene sus causales y lleva su documento de origen'
     expect($contrato->fresh()->estado->value)->toBe('terminado');
 });
 
+// ── La base legal: el COOTAD, nunca la LOSEP (fase 4.1c) ────────
+
+test('la renuncia y el fallecimiento de la autoridad no citan la LOSEP', function () {
+    // Las dos únicas causales que la elección popular comparte con el régimen
+    // LOSEP, y por las que el cese de la Prefecta salía citando la ley de los
+    // servidores públicos: «LOSEP Art. 47 a» y «LOSEP Art. 47 l».
+    foreach (['renuncia', 'fallecimiento'] as $causal) {
+        [$servidor] = ($this->enFunciones)('2023-05-15', now()->addYear()->toDateString());
+
+        $this->postJson("/api/v1/expediente/servidores/{$servidor->id}/movimientos", [
+            'clase'             => 'cesacion',
+            'causal'            => $causal,
+            'descripcion'       => 'Cese de la autoridad',
+            'fecha_efectiva'    => $this->hoy,
+            'resolucion_numero' => 'RES-CP-2026-050',
+        ])->assertCreated()
+            ->assertJsonPath('datos.causal_base_legal', 'COOTAD Arts. 52 núm. 1 y 336')
+            ->assertJsonPath('datos.base_legal_de_la_clase', 'COOTAD Arts. 52 núm. 1 y 336');
+    }
+
+    // Y al servidor LOSEP le siguen llegando las suyas, que es el caso general.
+    expect(SubtipoMovimientoPersonal::RENUNCIA->baseLegal())->toBe('LOSEP Art. 47 a; Reglamento Art. 102')
+        ->and(SubtipoMovimientoPersonal::FALLECIMIENTO->baseLegal())->toBe('LOSEP Art. 47 l')
+        // El contrato civil tampoco se rige por la LOSEP (fase 4.2).
+        ->and(SubtipoMovimientoPersonal::FALLECIMIENTO->baseLegal(TipoNombramiento::SERVICIOS_PROFESIONALES))
+        ->toBe('El contrato de servicios profesionales');
+});
+
+test('el fin del período tampoco, y el acto de la autoridad trae la suya', function () {
+    $servidor = ($this->persona)();
+    $inicio = ($this->registrar)(($this->iniciar)($servidor)->json('datos.id'));
+
+    // Se congela al suscribir, como la de la acción de personal: reimprimir la
+    // constancia mañana no puede decir otra cosa.
+    expect($inicio->base_legal)->toBe('Constitución Art. 252; COOTAD Art. 49')
+        ->and($inicio->baseLegalImpresa())->toBe('Constitución Art. 252; COOTAD Art. 49');
+
+    // El fin del período lo pone el sistema al cerrar: antes caía en la base de
+    // su clase, que es la cesación de la LOSEP.
+    app(AutoridadElectaService::class)->cerrarPeriodosTerminados(
+        now()->addYears(5)->toDateString()
+    );
+
+    $cierre = MovimientoPersonal::where('servidor_id', $servidor->id)
+        ->where('subtipo_movimiento', SubtipoMovimientoPersonal::FIN_DEL_PERIODO)
+        ->firstOrFail();
+
+    expect($cierre->baseLegalDeLaClase())->toBe('El período para el que fue electa la autoridad');
+});
+
+test('el catálogo manda la base legal de cada régimen en las causales compartidas', function () {
+    $causales = collect($this->getJson('/api/v1/expediente/acciones-personal/catalogo')->assertOk()
+        ->json('datos.clases'))
+        ->firstWhere('codigo', 'cesacion')['causales'];
+
+    $renuncia = collect($causales)->firstWhere('codigo', 'renuncia');
+    $fallecimiento = collect($causales)->firstWhere('codigo', 'fallecimiento');
+    $jubilacion = collect($causales)->firstWhere('codigo', 'jubilacion');
+
+    expect($renuncia['base_legal'])->toBe('LOSEP Art. 47 a; Reglamento Art. 102')
+        ->and($renuncia['base_legal_por_nombramiento'])->toBe([
+            ['nombramiento' => 'eleccion_popular', 'base_legal' => 'COOTAD Arts. 52 núm. 1 y 336'],
+        ])
+        ->and($fallecimiento['base_legal_por_nombramiento'])->toBe([
+            ['nombramiento' => 'eleccion_popular', 'base_legal' => 'COOTAD Arts. 52 núm. 1 y 336'],
+            ['nombramiento' => 'servicios_profesionales', 'base_legal' => 'El contrato de servicios profesionales'],
+        ])
+        // La que solo existe en el régimen LOSEP no lleva variantes.
+        ->and($jubilacion['base_legal_por_nombramiento'])->toBe([]);
+});
+
 test('la licencia de la autoridad también es acto de autoridad', function () {
     [$servidor] = ($this->enFunciones)('2023-05-15', now()->addYear()->toDateString());
 

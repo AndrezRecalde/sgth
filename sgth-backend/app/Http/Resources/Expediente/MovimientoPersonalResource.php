@@ -42,7 +42,9 @@ class MovimientoPersonalResource extends JsonResource
             // dice así en vez de dejar el hueco (diseño, 4.5).
             'causal_etiqueta' => $this->causal()?->etiqueta()
                 ?? ($this->clase?->requiereCausal() ? 'No indicada (histórico)' : null),
-            'causal_base_legal' => $this->causal()?->baseLegal(),
+            // Con el régimen del instrumento: la renuncia de una autoridad no
+            // cita la LOSEP (fase 4.1c).
+            'causal_base_legal' => $this->causal()?->baseLegal($this->instrumento?->nombramientoPropio()),
             // La terminación de una ocasional protegida por embarazo o
             // lactancia, mientras todavía se puede detener (fase 2.1).
             'aviso_proteccion' => $this->avisoDeProteccion(),
