@@ -158,6 +158,78 @@ test('al ingreso no se le registra la elección popular', function () {
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'Inicio del período'));
 });
 
+/*
+| La dignidad y el catálogo de los servidores no se cruzan (hallazgo H9 de la
+| prueba del 2026-11-26). Las dos mitades de la regla, una por prueba.
+*/
+test('el inicio del período no llega a un puesto que no es una dignidad', function () {
+    $otra = UnidadAdministrativa::create(['codigo' => 'ADM', 'nombre' => 'Gestión Administrativa', 'nivel' => 2]);
+    $asistente = Puesto::create([
+        'unidad_administrativa_id' => $otra->id, 'plazas' => 3,
+        'grupo_ocupacional_id'     => GrupoOcupacional::create([
+            'grado_codigo' => 'SPA-1', 'grado_numerico' => 1, 'grupo' => 'SP', 'denominacion_generica' => 'Asistente',
+            'rmu' => 585, 'regimen' => 'losep', 'activo' => true, 'rol_puesto' => 'administrativo',
+        ])->id,
+    ]);
+
+    // Sin esto, a cualquiera sin vínculo se le registraba un «Inicio del
+    // período» sobre un puesto administrativo y pasaba a ser autoridad electa:
+    // fuera del control de asistencia, del régimen disciplinario y de la ficha
+    // médica, y dentro de la pestaña donde solo caben dos dignidades.
+    ($this->iniciar)(($this->persona)(), [
+        'unidad_destino_id' => $otra->id,
+        'puesto_destino_id' => $asistente->id,
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'Ingreso y Vinculación'));
+});
+
+test('a una dignidad no se entra con una acción de personal', function () {
+    // El ascenso del Director de Talento Humano a Prefecto llegó a REGISTRADA
+    // en la prueba, con su correlativo gastado; lo único que lo frenó fue la
+    // plaza ocupada, tres pasos después. Aquí se corta al registrar, y da
+    // igual que la Prefectura esté libre.
+    $this->postJson('/api/v1/expediente/servidores/'.($this->persona)()->id.'/movimientos', [
+        'clase'                       => 'ingreso',
+        'descripcion'                 => 'Ingreso al puesto de Prefecto',
+        'fecha_efectiva'              => $this->hoy,
+        'tipo_nombramiento_propuesto' => 'nombramiento_permanente',
+        'unidad_destino_id'           => $this->prefectura->id,
+        'puesto_destino_id'           => $this->prefecto->id,
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'dignidad de elección popular'));
+});
+
+test('tampoco se llega a la dignidad corrigiendo el borrador', function () {
+    $otra = UnidadAdministrativa::create(['codigo' => 'ADM2', 'nombre' => 'Gestión Administrativa', 'nivel' => 2]);
+    $asistente = Puesto::create([
+        'unidad_administrativa_id' => $otra->id, 'plazas' => 3,
+        'grupo_ocupacional_id'     => GrupoOcupacional::create([
+            'grado_codigo' => 'SPA-2', 'grado_numerico' => 1, 'grupo' => 'SP', 'denominacion_generica' => 'Asistente',
+            'rmu' => 585, 'regimen' => 'losep', 'activo' => true, 'rol_puesto' => 'administrativo',
+        ])->id,
+    ]);
+
+    $id = $this->postJson('/api/v1/expediente/servidores/'.($this->persona)()->id.'/movimientos', [
+        'clase'                       => 'ingreso',
+        'descripcion'                 => 'Ingreso ordinario',
+        'fecha_efectiva'              => $this->hoy,
+        'tipo_nombramiento_propuesto' => 'nombramiento_permanente',
+        'unidad_destino_id'           => $otra->id,
+        'puesto_destino_id'           => $asistente->id,
+    ])->assertCreated()->json('datos.id');
+
+    // La ruta de edición solo pide `role:admin-uath`, así que se alcanza sin
+    // pasar por ninguna pantalla: la guarda tiene que estar también aquí.
+    $this->putJson("/api/v1/expediente/movimientos/{$id}", [
+        'unidad_destino_id' => $this->prefectura->id,
+        'puesto_destino_id' => $this->prefecto->id,
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'dignidad de elección popular'));
+});
+
 test('el formulario solo puede elegir entre las dignidades, y dice quién las ocupa', function () {
     [$prefecta] = ($this->enFunciones)('2023-05-15', '2027-05-14');
 

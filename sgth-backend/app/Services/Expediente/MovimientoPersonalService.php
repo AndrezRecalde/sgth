@@ -7,6 +7,7 @@ use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
 use App\Enums\InstrumentoActo;
+use App\Enums\RolPuesto;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\SupuestoProvisional;
 use App\Enums\TipoMovimientoPersonal;
@@ -165,6 +166,7 @@ class MovimientoPersonalService
             $datos = app(AutoridadElectaService::class)->completarInicio($servidor, $datos, $subtipo);
         }
         self::impedirIngresoDeAutoridad($tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null);
+        self::validarPuestoDeDignatario($tipoMovimiento, $datos['puesto_destino_id'] ?? null);
 
         // Quien cobró una indemnización al salir no reingresa mientras no la
         // devuelva (Mandato Constituyente 2, art. 8; fase 7.4b). La restitución
@@ -405,6 +407,12 @@ class MovimientoPersonalService
 
         $this->revalidarPeriodoDeComision($movimiento, $datos);
         $this->revalidarPeriodoDeLicencia($movimiento, $datos);
+
+        // Cambiar el puesto de un borrador vuelve a pasar por la regla de las
+        // dignidades: se alcanzaba por aquí sin tocar la pantalla.
+        if (array_key_exists('puesto_destino_id', $datos)) {
+            self::validarPuestoDeDignatario($movimiento->tipo_movimiento, $datos['puesto_destino_id']);
+        }
 
         // Cambiar el nombramiento de un ingreso en borrador puede cambiar su
         // instrumento: de acción a registro del contrato, o al revés.
@@ -706,6 +714,96 @@ class MovimientoPersonalService
             throw new ReglaNegocioException(
                 'La autoridad electa no ingresa con acción de personal: registre el «Inicio del período», con la '
                     .'credencial del CNE.'
+            );
+        }
+    }
+
+    /**
+     * Las dignidades de elección popular no se alcanzan con el catálogo de los
+     * servidores, ni al revés.
+     *
+     * Son las dos mitades de una misma regla:
+     *
+     * - a un puesto de rol `dignatario` solo se entra por el «Inicio del
+     *   período» —con la credencial del CNE o la designación del Consejo— o
+     *   por la asunción definitiva del Viceprefecto (COOTAD Art. 51);
+     * - y esas dos clases no llegan a ningún otro puesto.
+     *
+     * Sin esto (hallazgo H9 de la prueba del 2026-11-26) el agujero estaba
+     * abierto por los dos lados y verificado en los dos: a una persona sin
+     * vínculo se le registraba un «Inicio del período» sobre un puesto de
+     * Asistente Administrativo —y pasaba a ser la tercera autoridad electa de
+     * la institución, fuera del control de asistencia y del régimen
+     * disciplinario—, y al Director de Talento Humano se le registraba un
+     * ascenso a Prefecto, que llegó a REGISTRADA con su correlativo gastado.
+     * Lo único que lo frenó fue el motor de efectos, tres pasos después y por
+     * plaza ocupada: con la Prefectura vacante no lo habría parado nada.
+     *
+     * Va en el servicio y no en la pantalla porque la regla no puede depender
+     * de que el formulario se comporte bien: por aquí entran también
+     * Reclutamiento, Disciplinario y la API.
+     *
+     * Quedan fuera la restitución y el reintegro: esos no eligen puesto, lo
+     * devuelven. Quien vuelve por sentencia o al terminar su ausencia regresa
+     * al que ya tenía, sea cual sea su rol.
+     *
+     * Que la lista de dignidades sea exactamente Prefectura y Viceprefectura
+     * lo confirmó Talento Humano el 2026-10-09: «aparte del Prefecto y el
+     * Viceprefecto no hay otras dignidades de elección popular en la nómina».
+     */
+    private static function validarPuestoDeDignatario(TipoMovimientoPersonal $tipo, mixed $puestoId): void
+    {
+        $esDeAutoridad = in_array($tipo, [
+            TipoMovimientoPersonal::INICIO_PERIODO,
+            TipoMovimientoPersonal::ASUNCION_DEFINITIVA,
+        ], true);
+
+        // La restitución y el reintegro devuelven el puesto anterior, no lo
+        // eligen: la regla no les toca.
+        if (in_array($tipo, [
+            TipoMovimientoPersonal::RESTITUCION,
+            TipoMovimientoPersonal::REINTEGRO,
+        ], true)) {
+            return;
+        }
+
+        if (blank($puestoId)) {
+            if (! $esDeAutoridad) {
+                return;
+            }
+
+            throw new ReglaNegocioException(
+                "El «{$tipo->etiqueta()}» necesita el puesto de la dignidad: la Prefectura o la Viceprefectura."
+            );
+        }
+
+        $puesto = Puesto::with(['cargo', 'grupoOcupacional'])->find((int) $puestoId);
+
+        if (! $puesto) {
+            return;
+        }
+
+        // El rol del puesto, y si no lo tiene, el de su grado: el seeder de la
+        // escala marca NJS-10 (Prefecto/a) y NJS-7 (Viceprefecto/a) como
+        // `dignatario`, y es ahí donde el dato existe seguro. Mirar solo la
+        // columna del puesto dejaba la regla a merced de que alguien la
+        // hubiera llenado al crearlo.
+        $esDignidad = $puesto->rol_puesto === RolPuesto::DIGNATARIO
+            || $puesto->grupoOcupacional?->rol_puesto === RolPuesto::DIGNATARIO;
+        $cual = $puesto->cargo?->nombre ? "«{$puesto->cargo->nombre}»" : 'elegido';
+
+        if ($esDignidad && ! $esDeAutoridad) {
+            throw new ReglaNegocioException(
+                "El puesto {$cual} es una dignidad de elección popular: a él no se entra con una acción de "
+                    .'personal. Se llega por el «Inicio del período», con la credencial del CNE o la designación '
+                    .'del Consejo Provincial, o por la asunción definitiva del Viceprefecto (COOTAD Art. 51).'
+            );
+        }
+
+        if ($esDeAutoridad && ! $esDignidad) {
+            throw new ReglaNegocioException(
+                "El «{$tipo->etiqueta()}» es de las dignidades de elección popular, y el puesto {$cual} no lo es. "
+                    .'Para vincular a alguien a este puesto, registre su Ingreso y Vinculación.'
             );
         }
     }

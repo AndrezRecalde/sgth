@@ -40,7 +40,7 @@ beforeEach(function () {
 
     $grupo = fn (string $codigo, float $rmu) => GrupoOcupacional::create([
         'grado_codigo' => $codigo, 'grado_numerico' => 10, 'grupo' => 'NJS', 'denominacion_generica' => $codigo,
-        'rmu' => $rmu, 'regimen' => 'losep', 'activo' => true,
+        'rmu' => $rmu, 'regimen' => 'losep', 'activo' => true, 'rol_puesto' => 'dignatario',
     ]);
 
     $this->prefectura = UnidadAdministrativa::create([
