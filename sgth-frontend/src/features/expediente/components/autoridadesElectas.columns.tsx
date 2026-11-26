@@ -1,5 +1,5 @@
 import { Text } from '@mantine/core'
-import { IconBeach, IconCalendarEvent, IconFileText, IconUserCheck, IconUserOff } from '@tabler/icons-react'
+import { IconBeach, IconCalendarEvent, IconFileText, IconUmbrella, IconUserCheck, IconUserOff } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
@@ -108,6 +108,14 @@ interface Opciones {
   onReelegir: (a: AutoridadElecta) => void
   /** La licencia que concede el Consejo (COOTAD Art. 47 s). */
   onLicencia: (a: AutoridadElecta) => void
+  /**
+   * Registrar sus vacaciones descuenta días del saldo, y eso pide además
+   * `aprobar-vacaciones`: sin preguntarlo, la opción saldría para quien el
+   * servidor va a rechazar (fase 4.1d).
+   */
+  puedeRegistrarVacaciones: boolean
+  /** Las vacaciones que concede el Consejo, dentro de los mismos 60 días. */
+  onVacaciones: (a: AutoridadElecta) => void
   /** El cese: renuncia, fallecimiento, revocatoria o remoción. */
   onCesar: (a: AutoridadElecta) => void
 }
@@ -118,6 +126,8 @@ export const getAutoridadElectaColumns = ({
   onVerActo,
   onReelegir,
   onLicencia,
+  puedeRegistrarVacaciones,
+  onVacaciones,
   onCesar,
 }: Opciones): DataTableColumn<AutoridadElecta>[] => [
   {
@@ -196,6 +206,14 @@ export const getAutoridadElectaColumns = ({
             // Con una licencia en curso, la siguiente se registra cuando esa
             // termina: el tope de los 60 días las suma todas igualmente.
             hidden: Boolean(a.ausencia) || Boolean(a.cese) || !puedePreparar(a.servidor.id),
+          },
+          {
+            label: 'Registrar vacaciones del Consejo',
+            icon: <IconUmbrella size={14} />,
+            onClick: () => onVacaciones(a),
+            // Se puede registrar con una licencia en curso: son dos permisos
+            // distintos, y lo que no cabe lo dicen los dos topes.
+            hidden: Boolean(a.cese) || !puedeRegistrarVacaciones || !puedePreparar(a.servidor.id),
           },
           {
             label: 'Registrar cesación',

@@ -41,6 +41,9 @@
   $cargoServidor = $vacacion->servidor?->puesto?->cargo?->nombre;
   $cargoJefe     = $vacacion->jefe?->puesto?->cargo?->nombre;
 
+  // Las que concedió el Consejo llevan su resolución (fase 4.1d).
+  $porResolucion = filled($vacacion->resolucion_numero);
+
   // Las solicitudes antiguas no guardaban unidad: se toma la del servidor.
   $unidad = $vacacion->unidadAdministrativa?->nombre
     ?? $vacacion->servidor?->unidadAdministrativa?->nombre
@@ -284,6 +287,17 @@
           <td class="label">Lo reemplaza</td>
           <td class="mayus" colspan="3">{{ $nombreReemplaza !== '' ? $nombreReemplaza : 'No se asigna reemplazo' }}</td>
         </tr>
+        {{-- Las de una autoridad electa las concede el Consejo Provincial por
+             resolución, no su jefe inmediato (COOTAD Art. 47 s; fase 4.1d).
+             Sin esta fila, el papel no diría quién las autorizó. --}}
+        @if($porResolucion)
+          <tr>
+            <td class="label">Concedidas por</td>
+            <td colspan="3">
+              Resolución del Consejo Provincial N.º {{ $vacacion->resolucion_numero }} (COOTAD Art. 47 s)
+            </td>
+          </tr>
+        @endif
       </table>
     </td>
     <td class="qr">
@@ -339,12 +353,20 @@
         <p class="firma-cargo">{{ $cargoServidor ?? 'Servidor' }}</p>
       </td>
       <td>
-        <div class="firma-rotulo">Jefe inmediato</div>
+        {{-- A una autoridad electa no la autoriza un jefe: la autorización es
+             la resolución del Consejo, y ponerle una línea de firma de «jefe
+             inmediato» diría que alguien la concedió, que no es verdad. --}}
+        <div class="firma-rotulo">{{ $porResolucion ? 'Consejo Provincial' : 'Jefe inmediato' }}</div>
         <div class="firma-linea"></div>
         {{-- Sin jefe asignado queda el espacio, para que las firmas no se
              descuadren, y el cargo dice quién debe firmar. --}}
-        <p class="firma-nombre">@if($nombreJefe !== ''){{ $nombreJefe }}@else&nbsp;@endif</p>
-        <p class="firma-cargo">{{ $cargoJefe ?? 'Jefe inmediato' }}</p>
+        @if($porResolucion)
+          <p class="firma-nombre">Resolución N.º {{ $vacacion->resolucion_numero }}</p>
+          <p class="firma-cargo">Concedidas por resolución, sin firma en esta hoja</p>
+        @else
+          <p class="firma-nombre">@if($nombreJefe !== ''){{ $nombreJefe }}@else&nbsp;@endif</p>
+          <p class="firma-cargo">{{ $cargoJefe ?? 'Jefe inmediato' }}</p>
+        @endif
       </td>
     </tr>
     <tr class="segunda-fila">
@@ -372,9 +394,18 @@
      la puerta de atrás, que es justo lo que este documento evita. Así es
      cierto antes y después, y sigue explicando el trámite a quien lo ve por
      primera vez. --}}
+{{-- Y a una autoridad electa el trámite no le aplica: no tiene jefe inmediato
+     que firme ni papel que bajar a ventanilla, porque la resolución del
+     Consejo ya la concedió y el registro se hizo al recibirla (fase 4.1d).
+     Dejar la nota de siempre contradiría todo lo de arriba. --}}
 <p class="nota">
-  Este documento se entrega firmado por el servidor y su jefe inmediato en la
-  ventanilla de Talento Humano, que lo registra en el sistema.
+  @if($porResolucion)
+    Las vacaciones de una autoridad electa las concede el Consejo Provincial por resolución
+    (COOTAD Art. 47 s): esta hoja deja constancia de su registro, no se baja a firmar.
+  @else
+    Este documento se entrega firmado por el servidor y su jefe inmediato en la
+    ventanilla de Talento Humano, que lo registra en el sistema.
+  @endif
 </p>
 
 </body>

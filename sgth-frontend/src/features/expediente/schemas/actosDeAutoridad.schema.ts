@@ -50,3 +50,28 @@ export const cesacionDeAutoridadSchema = z.object({
 })
 
 export type CesacionDeAutoridadFormData = z.infer<typeof cesacionDeAutoridadSchema>
+
+/*
+| Las vacaciones que le concede el Consejo (COOTAD Art. 47 s; TH 2026-11-26;
+| fase 4.1d). No se pregunta el motivo —son vacaciones anuales—, ni el jefe que
+| autoriza —no lo hay—, ni con o sin remuneración: las vacaciones son siempre
+| con sueldo.
+*/
+export const vacacionesDeAutoridadSchema = z
+  .object({
+    fecha_inicio: requerido('Indique desde cuándo'),
+    fecha_fin: requerido('Indique hasta cuándo'),
+    resolucion_numero: requerido('Indique la resolución del Consejo').max(100),
+    observacion: z.string().trim().max(1000).optional().nullable(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.fecha_fin < data.fecha_inicio) {
+      ctx.addIssue({
+        path: ['fecha_fin'],
+        code: 'custom',
+        message: 'Las vacaciones no terminan antes de empezar',
+      })
+    }
+  })
+
+export type VacacionesDeAutoridadFormData = z.infer<typeof vacacionesDeAutoridadSchema>

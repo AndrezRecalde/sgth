@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Expediente;
 
+use App\Enums\TipoNombramiento;
 use App\Models\Expediente\Servidor;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -42,6 +43,13 @@ class ServidorBusquedaResource extends JsonResource
             'puede_marcar'     => $this->puede_marcar,
             // Permisos y vacaciones ofrecen como firmante solo a los jefes.
             'es_jefe'          => (bool) $this->puesto?->es_jefe,
+            // Vacaciones no se la ofrece a una autoridad electa: las suyas las
+            // concede el Consejo (fase 4.1d). Va fuera del bloque de Talento
+            // Humano —que es el que trae el nombramiento— porque el técnico de
+            // Asistencia registra a nombre de otro sin ver expedientes, y sin
+            // esto el selector se la seguiría ofreciendo. Quién es el Prefecto
+            // no es dato reservado.
+            'es_autoridad_electa' => $this->contratoVigente?->tipo_nombramiento === TipoNombramiento::ELECCION_POPULAR,
 
             'unidad_administrativa' => $this->whenLoaded('unidadAdministrativa', fn () => $this->unidadAdministrativa ? [
                 'id'     => $this->unidadAdministrativa->id,
