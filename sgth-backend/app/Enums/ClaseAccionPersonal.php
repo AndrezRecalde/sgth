@@ -150,6 +150,38 @@ enum ClaseAccionPersonal: string
     }
 
     /**
+     * Los actos de una autoridad electa (fase 4.1).
+     *
+     * No los emite una autoridad nominadora —nacen de la credencial del CNE o
+     * de una resolución del Consejo—, así que llevan su propia numeración (AU)
+     * y no llevan firmantes. Desde el 2026-11-26 se registran en la pestaña
+     * «Autoridades electas» y no en el formulario general.
+     */
+    public function esDeAutoridadElecta(): bool
+    {
+        return in_array($this, [
+            self::INICIO_PERIODO, self::LICENCIA_CONSEJO, self::ASUNCION_DEFINITIVA,
+        ], true);
+    }
+
+    /**
+     * ¿La ofrece y la corrige el formulario de «Nueva acción de personal»?
+     *
+     * No es lo mismo que `seCreaDesdeElFormulario()`, que responde si el
+     * endpoint acepta esa clase: hasta el 2026-11-26 las dos preguntas tenían
+     * la misma respuesta y por eso bastaba un método. Ahora no. El inicio del
+     * período y la licencia del Consejo **se siguen creando por el mismo
+     * endpoint** —la pestaña de autoridades manda `clase` igual que el
+     * formulario—, pero el formulario general ya no los ofrece ni los corrige:
+     * compartirlo con el régimen LOSEP es lo que produjo cuatro de los
+     * defectos de la prueba de ese día, el peor un callejón sin salida.
+     */
+    public function seOfreceEnElFormularioGeneral(): bool
+    {
+        return $this->seCreaDesdeElFormulario() && ! $this->esDeAutoridadElecta();
+    }
+
+    /**
      * El ingreso es la única clase que se registra a quien todavía no tiene
      * vínculo: es la que lo crea. Todas las demás exigen uno vigente.
      */

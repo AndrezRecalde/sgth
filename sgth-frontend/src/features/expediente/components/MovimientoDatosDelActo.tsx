@@ -15,8 +15,6 @@ import { FirmantesPanel } from './FirmantesPanel'
 import { MovimientoDatosJudiciales } from './MovimientoDatosJudiciales'
 import { MovimientoPuestoDelReintegro } from './MovimientoPuestoDelReintegro'
 import { MovimientoActaConcurso } from './MovimientoActaConcurso'
-import { MovimientoDatosDelPeriodo } from './MovimientoDatosDelPeriodo'
-import { MovimientoDatosLicenciaConsejo } from './MovimientoDatosLicenciaConsejo'
 import { MovimientoDocumentoDelMinisterio } from './MovimientoDocumentoDelMinisterio'
 import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
@@ -211,21 +209,6 @@ export function MovimientoDatosDelActo({
       {clase?.pide_datos_judiciales && <MovimientoDatosJudiciales form={form} obrero={reintegroDelObrero} />}
       {reintegroDelObrero && <MovimientoPuestoDelReintegro form={form} />}
 
-      {/* La licencia del Consejo: con o sin remuneración y su prórroga (4.1b). */}
-      {clase?.pide_datos_de_licencia_del_consejo && <MovimientoDatosLicenciaConsejo form={form} />}
-
-      {/* La autoridad electa empieza con la credencial del CNE (fase 4.1). */}
-      {clase?.pide_datos_del_periodo && (
-        <>
-          {clase.aviso && (
-            <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
-              {clase.aviso}
-            </Alert>
-          )}
-          <MovimientoDatosDelPeriodo form={form} />
-        </>
-      )}
-
       {/* El ascenso se gana en concurso, y entra de prueba por seis meses con
           su puesto reservado (fase 3.3). */}
       {clase?.pide_acta_concurso && (
@@ -268,11 +251,9 @@ export function MovimientoDatosDelActo({
             : 'El acta de terminación que firmaron las partes, o la partida de defunción.')
           : !conDocumentoDeOrigen
             ? undefined
-            : clase?.pide_datos_de_licencia_del_consejo
-              ? 'La resolución del Consejo Provincial que la concede.'
-              : clase?.causales.length
-                ? 'El resultado del CNE, la resolución del Consejo Provincial, la renuncia aceptada o la partida de defunción.'
-                : 'La resolución del Consejo Provincial o el oficio que lo origina.'}
+            : clase?.causales.length
+              ? 'El resultado del CNE, la resolución del Consejo Provincial, la renuncia aceptada o la partida de defunción.'
+              : 'La resolución del Consejo Provincial o el oficio que lo origina.'}
         placeholder={documentoObligatorio ? undefined : 'Opcional'}
         withAsterisk={documentoObligatorio}
         error={errors.resolucion_numero?.message}

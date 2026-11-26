@@ -898,12 +898,14 @@ class MovimientoPersonal extends Model
     /**
      * ¿Se corrige con el formulario de «Nueva acción de personal»?
      *
-     * Solo las acciones con una clase que ese formulario crea: la subrogación y
-     * el encargo se corrigen cancelándolos en su pantalla.
+     * Solo las acciones con una clase que ese formulario ofrece: la subrogación
+     * y el encargo se corrigen cancelándolos en su pantalla, y los actos de una
+     * autoridad electa —que desde el 2026-11-26 se registran en la suya—
+     * anulándolos y volviéndolos a registrar ahí.
      */
     public function editableEnFormulario(): bool
     {
-        return (bool) $this->clase?->seCreaDesdeElFormulario();
+        return (bool) $this->clase?->seOfreceEnElFormularioGeneral();
     }
 
     /**
