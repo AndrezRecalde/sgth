@@ -2,15 +2,21 @@
 
 import React from 'react'
 import { Alert, Button, Group, Stack, Text } from '@mantine/core'
-import { IconAlertTriangle, IconBuildingBank, IconInfoCircle, IconUserPlus, IconUserShare } from '@tabler/icons-react'
+import { IconAlertTriangle, IconBuildingBank, IconInfoCircle, IconUserCheck, IconUserPlus, IconUserShare } from '@tabler/icons-react'
 import { DataState, SectionHeading, SgthTable } from '@/components/ui'
+import { useAuth } from '@/hooks/useAuth'
 import { useAutoridadesElectas, useAutoridadesEntrantes } from '../hooks/useAutoridadesElectas'
 import { usePuedePrepararAcciones } from '../hooks/usePuedePrepararAccion'
 import type { AutoridadElecta } from '../services/autoridadElectaService'
 import { getAutoridadElectaColumns } from './autoridadesElectas.columns'
 import { getAutoridadEntranteColumns } from './autoridadesEntrantes.columns'
+import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
+import { CesacionDeAutoridadModal } from './CesacionDeAutoridadModal'
 import { FinDelPeriodoModal } from './FinDelPeriodoModal'
+import { LicenciaDelConsejoModal } from './LicenciaDelConsejoModal'
+import { InicioDelPeriodoModal } from './InicioDelPeriodoModal'
 import { SubrogacionPorLeyModal } from './SubrogacionPorLeyModal'
+import { VacacionesDeAutoridadModal } from './VacacionesDeAutoridadModal'
 
 /**
  * El Prefecto y el Viceprefecto en funciones y su período (diseño, 9.14; TH
@@ -28,25 +34,54 @@ export function AutoridadesElectasPanel() {
   const { data: autoridades = [], isLoading, error, refetch } = useAutoridadesElectas()
   const { data: entrantes = [], error: errorEntrantes } = useAutoridadesEntrantes()
   const puedePreparar = usePuedePrepararAcciones()
+  const { hasPermiso } = useAuth()
   const [aFijar, setAFijar] = React.useState<AutoridadElecta | null>(null)
   const [subrogar, setSubrogar] = React.useState(false)
+  const [actoVisto, setActoVisto] = React.useState<number | null>(null)
+  const [iniciar, setIniciar] = React.useState(false)
+  const [reelegir, setReelegir] = React.useState<AutoridadElecta | null>(null)
+  const [conLicencia, setConLicencia] = React.useState<AutoridadElecta | null>(null)
+  const [conVacaciones, setConVacaciones] = React.useState<AutoridadElecta | null>(null)
+  const [aCesar, setACesar] = React.useState<AutoridadElecta | null>(null)
 
-  const columns = getAutoridadElectaColumns({ puedePreparar, onFijarFin: setAFijar })
+  const columns = getAutoridadElectaColumns({
+    puedePreparar,
+    onFijarFin: setAFijar,
+    onVerActo: setActoVisto,
+    onReelegir: setReelegir,
+    onLicencia: setConLicencia,
+    // Registrar vacaciones mueve el saldo: es de quien las aprueba, no solo
+    // de quien prepara acciones (fase 4.1d).
+    puedeRegistrarVacaciones: hasPermiso('aprobar-vacaciones'),
+    onVacaciones: setConVacaciones,
+    onCesar: setACesar,
+  })
   const columnasEntrantes = getAutoridadEntranteColumns()
   const relevosSinCuadrar = entrantes.filter((e) => e.aviso)
   // Con Prefecto y sin nadie más en funciones, la Viceprefectura está vacante:
   // tras la asunción o la renuncia, el Consejo designa al nuevo (2026-10-20).
   const sinViceprefecto = autoridades.some((a) => a.es_prefecto) && autoridades.every((a) => a.es_prefecto)
+  /*
+  | Y el aviso inverso, que es el que de verdad urge: sin Prefecto no hay
+  | autoridad nominadora, y ninguna acción de personal —de nadie— se puede
+  | suscribir. Pasa entre el cese de uno y la asunción del otro, y hasta ahora
+  | la pantalla no lo decía en ninguna parte.
+  |
+  | Con la lista vacía no se pinta: ya lo dice el estado vacío de la tabla.
+  */
+  const sinPrefecto = autoridades.length > 0 && autoridades.every((a) => !a.es_prefecto)
+  const asuncionEnTramite = autoridades.find((a) => a.asuncion)
 
   return (
     <Stack gap="md">
       <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
         A las autoridades electas no se les emite acción de personal: su período
-        empieza con la credencial del CNE y se cierra solo en su fecha. Si fue
-        reelegida, registre el inicio del período nuevo desde «Nueva acción de
-        personal»: empieza cuando termina el actual, sin cortar su antigüedad. La
-        licencia del Prefecto de más de tres días prepara sola la subrogación por
-        ley del Viceprefecto (COOTAD Art. 51).
+        empieza con la credencial del CNE —o con la resolución del Consejo, si
+        designa al Viceprefecto— y se cierra solo en su fecha. Se registran desde
+        aquí el inicio del período, el de la reelegida, que empieza cuando termina
+        el actual sin cortar su antigüedad, y la subrogación por ley del
+        Viceprefecto, que la licencia del Prefecto de más de tres días prepara
+        sola (COOTAD Art. 51).
       </Alert>
 
       {relevosSinCuadrar.map((e) => (
@@ -61,6 +96,26 @@ export function AutoridadesElectasPanel() {
         </Alert>
       ))}
 
+      {sinPrefecto && (
+        <Alert variant="light" color="red" icon={<IconAlertTriangle size={16} />} title="No hay Prefecto en funciones">
+          {asuncionEnTramite?.asuncion ? (
+            <>
+              El Viceprefecto {asuncionEnTramite.servidor.nombre} asume hasta terminar el período (COOTAD
+              Art. 51), pero su acto sigue{' '}
+              {asuncionEnTramite.asuncion.codigo_registro ? 'sin surtir efecto' : 'en trámite'}. Complételo
+              desde «Lo que sigue»: mientras tanto <b>ninguna acción de personal se puede suscribir</b>, porque
+              es el Prefecto quien firma como autoridad nominadora.
+            </>
+          ) : (
+            <>
+              Ninguna acción de personal se puede suscribir mientras no lo haya: es quien firma como autoridad
+              nominadora. Si el anterior cesó, registre la asunción definitiva del Viceprefecto (COOTAD Art. 51)
+              o el inicio del período de quien entra.
+            </>
+          )}
+        </Alert>
+      )}
+
       {sinViceprefecto && (
         <Alert variant="light" color="amber" icon={<IconInfoCircle size={16} />} title="No hay Viceprefecto en funciones">
           Regístrelo desde «Nueva acción de personal» con el «Inicio del período». Si se eligió junto con el
@@ -72,6 +127,9 @@ export function AutoridadesElectasPanel() {
 
       {puedePreparar(null) && (
         <Group justify="flex-end">
+          <Button variant="light" leftSection={<IconUserCheck size={16} />} onClick={() => setIniciar(true)}>
+            Registrar inicio del período
+          </Button>
           <Button variant="light" leftSection={<IconUserShare size={16} />} onClick={() => setSubrogar(true)}>
             Registrar subrogación por ley
           </Button>
@@ -109,6 +167,43 @@ export function AutoridadesElectasPanel() {
           <SgthTable records={entrantes} columns={columnasEntrantes} idAccessor="movimiento_id" minHeight={120} />
         </Stack>
       )}
+
+      <AccionPersonalDetalleDrawer
+        opened={actoVisto !== null}
+        movimientoId={actoVisto}
+        onClose={() => setActoVisto(null)}
+      />
+
+      <InicioDelPeriodoModal opened={iniciar} onClose={() => setIniciar(false)} />
+
+      <InicioDelPeriodoModal
+        opened={!!reelegir}
+        onClose={() => setReelegir(null)}
+        reeleccion={reelegir?.servidor.id ? {
+          servidorId: reelegir.servidor.id,
+          nombre: reelegir.servidor.nombre,
+          puestoId: reelegir.puesto_id,
+          hasta: reelegir.hasta,
+        } : null}
+      />
+
+      <LicenciaDelConsejoModal
+        opened={!!conLicencia}
+        onClose={() => setConLicencia(null)}
+        autoridad={conLicencia}
+      />
+
+      <VacacionesDeAutoridadModal
+        opened={!!conVacaciones}
+        onClose={() => setConVacaciones(null)}
+        autoridad={conVacaciones}
+      />
+
+      <CesacionDeAutoridadModal
+        opened={!!aCesar}
+        onClose={() => setACesar(null)}
+        autoridad={aCesar}
+      />
 
       <FinDelPeriodoModal opened={!!aFijar} onClose={() => setAFijar(null)} autoridad={aFijar} />
       <SubrogacionPorLeyModal opened={subrogar} onClose={() => setSubrogar(false)} />

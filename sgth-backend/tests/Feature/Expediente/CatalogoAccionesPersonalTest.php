@@ -148,6 +148,43 @@ test('el catálogo trae todas las familias y todas las clases, con su familia', 
         ->and($subrogacion['nombramientos_elegibles'])->toBe([]);
 });
 
+test('el formulario general ya no ofrece los actos de una autoridad electa', function () {
+    $clases = collect($this->getJson('/api/v1/expediente/acciones-personal/catalogo')->assertOk()
+        ->json('datos.clases'))->keyBy('codigo');
+
+    /*
+    | Desde el 2026-11-26 se registran en «Autoridades electas» (fase 4.1).
+    | Compartir formulario con el régimen LOSEP produjo cuatro defectos: el
+    | error que caía en un campo del documento del Ministerio que esa pantalla
+    | no monta para una autoridad, los dos campos de resolución
+    | indistinguibles, el rótulo «Por qué termina» en el acto que empieza, y
+    | que el «Inicio del período» se le ofreciera a cualquiera sin vínculo.
+    */
+    foreach (['inicio_periodo', 'licencia_consejo', 'asuncion_definitiva'] as $codigo) {
+        expect($clases[$codigo]['se_crea_desde_formulario'])->toBeFalse("«{$codigo}» no se ofrece")
+            ->and($clases[$codigo]['es_de_autoridad_electa'])->toBeTrue("«{$codigo}» es de autoridad");
+    }
+
+    // Y lo que sí sigue siendo del formulario no se movió.
+    expect($clases['ingreso']['se_crea_desde_formulario'])->toBeTrue()
+        ->and($clases['ingreso']['es_de_autoridad_electa'])->toBeFalse()
+        // La cesación se queda: es la única figura que una autoridad comparte
+        // con el resto del personal. Quitarla de su vista es cosa de la
+        // pantalla, que no la ofrece cuando el servidor es de elección popular.
+        ->and($clases['cesacion']['se_crea_desde_formulario'])->toBeTrue()
+        ->and($clases['cesacion']['es_de_autoridad_electa'])->toBeFalse();
+});
+
+test('el acto de una autoridad no se corrige con el formulario general', function () {
+    foreach ([ClaseAccionPersonal::INICIO_PERIODO, ClaseAccionPersonal::LICENCIA_CONSEJO] as $clase) {
+        // El endpoint los sigue aceptando: la pestaña de autoridades manda
+        // `clase` por la misma ruta. Lo que cambia es quién los enseña.
+        expect($clase->seCreaDesdeElFormulario())->toBeTrue("«{$clase->value}» se crea por el endpoint")
+            ->and($clase->seOfreceEnElFormularioGeneral())->toBeFalse("«{$clase->value}» no lo ofrece el formulario")
+            ->and((new MovimientoPersonal(['clase' => $clase]))->editableEnFormulario())->toBeFalse();
+    }
+});
+
 // ── Ninguna regla cambió con el vocabulario ─────────────────────
 
 /*

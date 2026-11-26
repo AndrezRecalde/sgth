@@ -1,10 +1,11 @@
 'use client'
 
-import { Grid, Select } from '@mantine/core'
+import { Alert, Grid, Select } from '@mantine/core'
+import { IconInfoCircle } from '@tabler/icons-react'
 import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { generaVacaciones } from '@/lib/regimen'
-import { opcionServidor, useOpcionesSolicitante } from '../hooks/useOpcionesSolicitante'
+import { nombreServidor, opcionServidor, useOpcionesSolicitante } from '../hooks/useOpcionesSolicitante'
 import { SaldoVacacionesAlert } from './SaldoVacacionesAlert'
 import { MOTIVO_OPCIONES } from './vacaciones.constants'
 import type { VacacionFormData } from './vacacion.schema'
@@ -32,8 +33,15 @@ export function VacacionSolicitanteCampos({
   // Quien no genera vacaciones no aparece en el selector. El backend lo
   // rechaza igual, pero ofrecerlo aquí sería abrir una puerta para cerrarla en
   // la cara: la persona elige, llena las fechas y recién al enviar se entera.
+  //
+  // Una autoridad electa sí genera vacaciones —es de régimen LOSEP y acumula
+  // sus 30 días—, pero **se las concede el Consejo Provincial por resolución**
+  // (COOTAD Art. 47 s; TH 2026-11-26), así que esta vía no es la suya: se
+  // registran en Expediente › «Autoridades electas». Si siguiera aquí, el
+  // Prefecto se saltaría al Consejo sin querer.
+  const autoridades = servidores.filter(s => s.es_autoridad_electa)
   const opcionesServidor = servidores
-    .filter(s => generaVacaciones(s.regimen_laboral))
+    .filter(s => generaVacaciones(s.regimen_laboral) && !s.es_autoridad_electa)
     .map(opcionServidor)
 
   // Nadie se reemplaza a sí mismo: el backend lo rechaza, así que tampoco se
@@ -47,6 +55,21 @@ export function VacacionSolicitanteCampos({
 
   return (
     <>
+      {autoridades.length > 0 && (
+        <Alert
+          variant="light"
+          color="ocean"
+          icon={<IconInfoCircle size={16} />}
+          mb="sm"
+        >
+          {autoridades.map(a => nombreServidor(a)).join(', ')}{' '}
+          {autoridades.length === 1 ? 'no está' : 'no están'} en la lista: a las
+          autoridades electas <b>les concede las vacaciones el Consejo Provincial, por
+          resolución</b> (COOTAD Art. 47 s). Se registran en Expediente ›
+          «Autoridades electas».
+        </Alert>
+      )}
+
       <Controller
         name="unidad_administrativa_id"
         control={control}

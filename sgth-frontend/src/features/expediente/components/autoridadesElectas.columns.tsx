@@ -1,5 +1,5 @@
 import { Text } from '@mantine/core'
-import { IconCalendarEvent } from '@tabler/icons-react'
+import { IconBeach, IconCalendarEvent, IconFileText, IconUmbrella, IconUserCheck, IconUserOff } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
@@ -40,10 +40,27 @@ function Ausencia({ a }: { a: AutoridadElecta }) {
 }
 
 /**
- * Lo que sigue: el cese en curso, el período nuevo de la autoridad reelegida,
- * o quien entra a su puesto cuando termina (2026-10-21).
+ * Lo que sigue: la dignidad que va a asumir, el cese en curso, el período
+ * nuevo de la autoridad reelegida, o quien entra a su puesto cuando termina
+ * (2026-10-21).
+ *
+ * La asunción va primero porque es la única que pide algo: mientras no se
+ * registre, la institución está sin autoridad nominadora.
  */
 function Siguiente({ a }: { a: AutoridadElecta }) {
+  if (a.asuncion) {
+    return (
+      <div>
+        {/* La insignia, corta como las vecinas: la dignidad no cabe dentro. */}
+        <StatusBadge tone="warning">Asunción</StatusBadge>
+        <Text size="xs">Asume {a.asuncion.dignidad ?? 'la Prefectura'}</Text>
+        <Text size="xs" c="dimmed">
+          {a.asuncion.codigo_registro ?? 'En trámite'} · desde el {formatFecha(a.asuncion.fecha_efectiva)}
+        </Text>
+      </div>
+    )
+  }
+
   if (a.cese) {
     return (
       <div>
@@ -85,11 +102,33 @@ interface Opciones {
   /** ¿Quien mira puede preparar acciones para ese servidor? */
   puedePreparar: (servidorId: number | null) => boolean
   onFijarFin: (a: AutoridadElecta) => void
+  /** Abre el acto en su cajón, que es donde se suscribe y se registra. */
+  onVerActo: (movimientoId: number) => void
+  /** El período siguiente de la autoridad reelegida (TH 4). */
+  onReelegir: (a: AutoridadElecta) => void
+  /** La licencia que concede el Consejo (COOTAD Art. 47 s). */
+  onLicencia: (a: AutoridadElecta) => void
+  /**
+   * Registrar sus vacaciones descuenta días del saldo, y eso pide además
+   * `aprobar-vacaciones`: sin preguntarlo, la opción saldría para quien el
+   * servidor va a rechazar (fase 4.1d).
+   */
+  puedeRegistrarVacaciones: boolean
+  /** Las vacaciones que concede el Consejo, dentro de los mismos 60 días. */
+  onVacaciones: (a: AutoridadElecta) => void
+  /** El cese: renuncia, fallecimiento, revocatoria o remoción. */
+  onCesar: (a: AutoridadElecta) => void
 }
 
 export const getAutoridadElectaColumns = ({
   puedePreparar,
   onFijarFin,
+  onVerActo,
+  onReelegir,
+  onLicencia,
+  puedeRegistrarVacaciones,
+  onVacaciones,
+  onCesar,
 }: Opciones): DataTableColumn<AutoridadElecta>[] => [
   {
     accessor: 'servidor',
@@ -145,6 +184,42 @@ export const getAutoridadElectaColumns = ({
             icon: <IconCalendarEvent size={14} />,
             onClick: () => onFijarFin(a),
             hidden: !a.puede_fijar_fin || !puedePreparar(a.servidor.id),
+          },
+          {
+            label: 'Completar la asunción',
+            icon: <IconFileText size={14} />,
+            onClick: () => a.asuncion && onVerActo(a.asuncion.id),
+            hidden: !a.asuncion,
+          },
+          {
+            // Se esconde si ya hay un período siguiente —es uno por autoridad,
+            // y el sistema rechaza el segundo— o si está cesando.
+            label: 'Registrar su reelección',
+            icon: <IconUserCheck size={14} />,
+            onClick: () => onReelegir(a),
+            hidden: Boolean(a.siguiente) || Boolean(a.cese) || !puedePreparar(a.servidor.id),
+          },
+          {
+            label: 'Registrar licencia del Consejo',
+            icon: <IconBeach size={14} />,
+            onClick: () => onLicencia(a),
+            // Con una licencia en curso, la siguiente se registra cuando esa
+            // termina: el tope de los 60 días las suma todas igualmente.
+            hidden: Boolean(a.ausencia) || Boolean(a.cese) || !puedePreparar(a.servidor.id),
+          },
+          {
+            label: 'Registrar vacaciones del Consejo',
+            icon: <IconUmbrella size={14} />,
+            onClick: () => onVacaciones(a),
+            // Se puede registrar con una licencia en curso: son dos permisos
+            // distintos, y lo que no cabe lo dicen los dos topes.
+            hidden: Boolean(a.cese) || !puedeRegistrarVacaciones || !puedePreparar(a.servidor.id),
+          },
+          {
+            label: 'Registrar cesación',
+            icon: <IconUserOff size={14} />,
+            onClick: () => onCesar(a),
+            hidden: Boolean(a.cese) || !puedePreparar(a.servidor.id),
           },
         ]}
       />

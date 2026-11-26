@@ -1,7 +1,7 @@
 'use client'
 
 import { Alert, SimpleGrid, Skeleton, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core'
-import { IconAlertTriangle } from '@tabler/icons-react'
+import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { BuscarServidorSelect } from './BuscarServidorSelect'
 import { useCatalogoAcciones } from '../hooks/useCatalogoAcciones'
 import {
@@ -19,6 +19,9 @@ interface Props {
   onFamiliaSeleccionada: (familia: FamiliaDelCatalogo) => void
 }
 
+const AVISO_AUTORIDAD = 'A las autoridades electas no se les emite acción de personal: '
+  + 'sus actos se registran en la pestaña «Autoridades electas», con su documento de origen.'
+
 function tooltipDeshabilitado(
   catalogo: CatalogoAccionesPersonal,
   familia: FamiliaDelCatalogo,
@@ -27,6 +30,7 @@ function tooltipDeshabilitado(
 ): string {
   const exigeVinculo = familiaRequiereVinculo(catalogo, familia.codigo)
 
+  if (tipoNombramiento === 'eleccion_popular') return AVISO_AUTORIDAD
   if (pendienteVinculacion === true) {
     return 'Este servidor no tiene un vínculo laboral vigente: solo cabe su Ingreso y Vinculación o, si vuelve por orden judicial, su Restitución (en el obrero, el reintegro por despido ineficaz).'
   }
@@ -58,6 +62,7 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onFamili
   const ningunaAplica = !!datos && familias.every(
     (f) => !familiaDisponible(datos, f.codigo, vinculo),
   )
+  const esAutoridadElecta = pendienteVinculacion === false && tipoNombramiento === 'eleccion_popular'
 
   return (
     <Stack gap="lg">
@@ -93,9 +98,23 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onFamili
             </Alert>
           )}
 
+          {/* La autoridad electa no es «ninguna acción aplica a su
+              nombramiento»: es que este formulario no es el suyo, y hay que
+              decir cuál lo es (fase 4.1). */}
+          {esAutoridadElecta && (
+            <Alert
+              variant="light"
+              color="ocean"
+              icon={<IconInfoCircle size={16} />}
+            >
+              {AVISO_AUTORIDAD} Ahí se registran el inicio de su período —también el de la
+              reelegida—, la licencia que le concede el Consejo y su cesación.
+            </Alert>
+          )}
+
           {/* Tarjetas en gris con su tooltip no son una respuesta: si ninguna
               aplica, hay que decirlo de frente y nombrar el motivo. */}
-          {pendienteVinculacion === false && ningunaAplica && (
+          {pendienteVinculacion === false && ningunaAplica && !esAutoridadElecta && (
             <Alert
               variant="light"
               color="amber"

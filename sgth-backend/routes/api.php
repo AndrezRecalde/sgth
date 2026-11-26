@@ -648,11 +648,26 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:admin-uath|asistente-uath');
         Route::get('autoridades-electas/entrantes', [AutoridadElectaController::class, 'entrantes'])
             ->middleware('role:admin-uath|asistente-uath');
+        // Las dignidades que hay y quién las ocupa: lo único que puede elegir
+        // el formulario del inicio del período (fase 4.1).
+        Route::get('autoridades-electas/dignidades', [AutoridadElectaController::class, 'dignidades'])
+            ->middleware('permission:preparar-accion-personal');
         Route::post('contratos/{contrato}/fin-del-periodo', [AutoridadElectaController::class, 'fijarFinDelPeriodo'])
             ->middleware('permission:preparar-accion-personal');
         // La subrogación por ley del Viceprefecto (fase 4.1b).
         Route::post('autoridades-electas/subrogacion-por-ley', [AutoridadElectaController::class, 'subrogacionPorLey'])
             ->middleware('permission:preparar-accion-personal');
+        // Las vacaciones que le concede el Consejo (fase 4.1d). Van aquí y no
+        // en Asistencia porque a una autoridad esa vía le está cerrada: no hay
+        // jefe inmediato que las autorice.
+        //
+        // Pide los dos permisos, no uno: registrarlas descuenta días del saldo,
+        // y eso el sistema ya decidió que es de quien aprueba vacaciones
+        // —asistente-uath no lo tiene a propósito—. Con solo
+        // `preparar-accion-personal` esta pantalla sería la puerta de atrás
+        // para descontarle días al Prefecto sin ese permiso.
+        Route::post('autoridades-electas/vacaciones', [AutoridadElectaController::class, 'vacaciones'])
+            ->middleware(['permission:preparar-accion-personal', 'permission:aprobar-vacaciones']);
 
         // Las terminaciones de obreros y sus actas de finiquito (fase 4.5).
         Route::get('terminaciones-obreros', [TerminacionObreroController::class, 'index'])
