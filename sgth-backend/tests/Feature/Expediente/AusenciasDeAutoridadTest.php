@@ -307,12 +307,8 @@ test('la asunción pendiente se ve en la pestaña, y el aviso de que no hay Pref
         ->and($filas->every(fn (array $f) => $f['es_prefecto'] === false))->toBeTrue();
 
     // Cuando surte efecto deja de ser «lo que sigue»: ya es su puesto. El
-    // documento va a mano porque esta rama sale de main; con el #675 la
-    // asunción lo hereda del cese y esta línea sobra.
-    $this->servicio->actualizarBorrador($asuncion, [
-        'fecha_efectiva'    => $this->hoy,
-        'resolucion_numero' => 'RES-CP-2026-041',
-    ]);
+    // documento no se toca: desde el #675 la asunción lo hereda del cese.
+    $this->servicio->actualizarBorrador($asuncion, ['fecha_efectiva' => $this->hoy]);
     ($this->registrar)($asuncion->id);
 
     $filas = collect($this->getJson('/api/v1/expediente/autoridades-electas')->assertOk()->json('datos'))
@@ -320,6 +316,30 @@ test('la asunción pendiente se ve en la pestaña, y el aviso de que no hay Pref
 
     expect($filas[$this->vice->id]['asuncion'])->toBeNull()
         ->and($filas[$this->vice->id]['es_prefecto'])->toBeTrue();
+});
+
+test('la asunción se suscribe con el documento que heredó, sin tocar nada más', function () {
+    $cese = ($this->registrar)($this->servicio->registrar($this->prefecto->id, [
+        'tipo_movimiento'    => TipoMovimientoPersonal::CESACION_FUNCIONES->value,
+        'subtipo_movimiento' => SubtipoMovimientoPersonal::FALLECIMIENTO->value,
+        'descripcion'        => 'Fallecimiento del Prefecto Provincial',
+        'fecha_efectiva'     => $this->hoy,
+        'resolucion_numero'  => 'PARTIDA-DEF-2026-0007',
+    ])->id);
+
+    $asuncion = MovimientoPersonal::where('movimiento_relacionado_id', $cese->id)
+        ->where('tipo_movimiento', TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value)
+        ->firstOrFail();
+
+    // Lo que importa: pasa a suscrita tal como nació. Antes reventaba aquí con
+    // «no se puede suscribir sin el documento de origen» y no había dónde
+    // ponerlo, así que la institución se quedaba sin Prefecto en funciones
+    // —el que firma las acciones de personal de todos los demás— hasta que
+    // alguien lo arreglara por base de datos.
+    $suscrita = $this->estados->transicionar($asuncion, EstadoAccionPersonal::SUSCRITA);
+
+    expect($suscrita->estado)->toBe(EstadoAccionPersonal::SUSCRITA)
+        ->and($suscrita->resolucion_numero)->toBe('PARTIDA-DEF-2026-0007');
 });
 
 test('el fin del período no prepara asunción: termina también el del Viceprefecto', function () {
