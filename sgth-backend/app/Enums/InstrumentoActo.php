@@ -135,6 +135,27 @@ enum InstrumentoActo: string
     }
 
     /**
+     * El nombramiento que obliga a este instrumento, si es uno solo (fase
+     * 4.1c): el recíproco de `para()` en los tres regímenes que tienen
+     * documento propio.
+     *
+     * Sirve para saber qué norma rige un acto ya registrado sin volver a
+     * consultar su vínculo —que pudo cambiar, o cerrarse con este mismo acto—.
+     * La acción de personal y el registro del contrato valen para varios
+     * nombramientos del régimen LOSEP, así que devuelven null: ahí no hay nada
+     * que distinguir.
+     */
+    public function nombramientoPropio(): ?TipoNombramiento
+    {
+        return match ($this) {
+            self::ACTO_AUTORIDAD => TipoNombramiento::ELECCION_POPULAR,
+            self::CONTRATO_CIVIL => TipoNombramiento::SERVICIOS_PROFESIONALES,
+            self::DOCUMENTO_CT   => TipoNombramiento::CODIGO_TRABAJO,
+            default              => null,
+        };
+    }
+
+    /**
      * El documento del Ministerio, con su número AP. El contrato se firma
      * aparte, y el contrato civil con sus adendas también. El acto de autoridad
      * tiene su constancia, opcional y con su número AU [TH 6; fase 4.1b], y el

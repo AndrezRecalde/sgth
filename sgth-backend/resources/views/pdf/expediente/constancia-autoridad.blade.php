@@ -164,6 +164,11 @@
     @if($movimiento->resolucion_numero)
         <tr><td class="label">Documento de origen</td><td>{{ $movimiento->resolucion_numero }}</td></tr>
     @endif
+    {{-- La del COOTAD y la Constitución, nunca la de la LOSEP (fase 4.1c).
+         Vacía solo en un acto registrado antes de que esta pestaña existiera. --}}
+    @if($movimiento->baseLegalImpresa())
+        <tr><td class="label">Base legal</td><td>{{ $movimiento->baseLegalImpresa() }}</td></tr>
+    @endif
 </table>
 
 <div class="bloque-titulo">Explicación</div>

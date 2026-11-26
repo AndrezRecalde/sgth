@@ -216,6 +216,13 @@ class MovimientoPersonalStateService
             // su constancia la firma solo Talento Humano (fase 4.1b).
             $this->exigirDocumentoDeOrigen($movimiento);
             $this->firmanteService->sellarTalentoHumanoEn($movimiento, $datos['fecha_suscripcion'] ?? null);
+
+            // Desde la fase 4.1c su constancia imprime la base legal, así que
+            // se congela por el mismo motivo que la de la acción de personal:
+            // reimprimirla mañana no puede decir otra cosa.
+            if (blank($movimiento->base_legal)) {
+                $movimiento->base_legal = $movimiento->baseLegalDeLaClase();
+            }
         } elseif ($instrumento === InstrumentoActo::CONTRATO_CIVIL) {
             // El del contrato civil lo firmaron las partes: lleva el número de
             // la adenda o del acta (fase 4.2).

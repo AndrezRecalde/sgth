@@ -765,10 +765,17 @@ class MovimientoPersonal extends Model
     /**
      * La base legal que pone su clase, con la de la causal si la tiene. Es la
      * que se propone al crearla y la que se congela al suscribir.
+     *
+     * El régimen lo dice el instrumento y no el vínculo vigente (fase 4.1c):
+     * una cesación cierra el vínculo que explicaría de qué régimen era, y el
+     * instrumento quedó grabado al registrarla.
      */
     public function baseLegalDeLaClase(): ?string
     {
-        return $this->clase?->baseLegal($this->subtipoEfectivo());
+        return $this->clase?->baseLegal(
+            $this->subtipoEfectivo(),
+            $this->instrumento?->nombramientoPropio(),
+        );
     }
 
     /**

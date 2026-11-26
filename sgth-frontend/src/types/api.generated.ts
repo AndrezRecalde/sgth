@@ -11945,8 +11945,19 @@ export interface components {
             codigo: components["schemas"]["SubtipoMovimientoPersonal"];
             /** @enum {string} */
             etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Elección" | "Designación del Consejo Provincial" | "Terminación por mutuo acuerdo" | "Terminación anticipada según el contrato" | "Renuncia (desahucio)" | "Acuerdo de las partes" | "Conclusión de la obra o del servicio" | "Despido intempestivo" | "Muerte o incapacidad permanente" | "Caso fortuito o fuerza mayor" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo)" | "Revalorización" | "Reclasificación" | "Ubicación";
-            /** @enum {string|null} */
-            base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | "COOTAD, Art. 47 literal n" | null;
+            /**
+             * @description La del régimen LOSEP, que es el caso general, y las de los
+             *     regímenes que citan otra norma por la misma causal (fase 4.1c):
+             *     el formulario elige con el nombramiento del servidor buscado. Va como lista y no como mapa porque Scramble no sabe leer un
+             *     arreglo con claves de cadena: lo tipa como una tupla posicional
+             *     y el tipo que llega al frontend queda mintiendo. Y dentro de un
+             *     `array_map` tampoco ve la forma, así que va anotada.
+             */
+            base_legal: string | null;
+            base_legal_por_nombramiento: {
+                nombramiento: components["schemas"]["TipoNombramiento"];
+                base_legal: string;
+            }[];
             nombramientos_elegibles: [
                 components["schemas"]["TipoNombramiento"]
             ] | [
@@ -12065,9 +12076,8 @@ export interface components {
             /**
              * @description La que el formulario propone para la explicación del documento;
              *     con causal, manda la de la causal (fase 6.1).
-             * @enum {string|null}
              */
-            base_legal: "LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19" | "LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227" | "LOSEP Art. 32" | "LOSEP Art. 46" | "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191" | "LOSEP Arts. 35 y 36" | "LOSEP Art. 37; Reglamento a la LOSEP Art. 69" | "LOSEP Arts. 61 y 62; Reglamento a la LOSEP Arts. 163 y 173" | "LOSEP Arts. 39 y 40" | "LOSEP Art. 30" | "LOSEP Art. 31" | "LOSEP Art. 28" | "LOSEP Art. 126; Reglamento a la LOSEP Art. 270" | "LOSEP Art. 127; Reglamento a la LOSEP Art. 271" | "LOSEP Art. 43; Reglamento a la LOSEP Art. 87" | "LOSEP Art. 47" | "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | "COOTAD, Art. 47 literal n" | null;
+            base_legal: string | null;
             pide_situacion_propuesta: boolean;
             pide_periodo: boolean;
             pide_institucion_destino: boolean;
@@ -14090,6 +14100,10 @@ export interface components {
              *     dice así en vez de dejar el hueco (diseño, 4.5).
              */
             causal_etiqueta: string | null | "No indicada (histórico)";
+            /**
+             * @description Con el régimen del instrumento: la renuncia de una autoridad no
+             *     cita la LOSEP (fase 4.1c).
+             */
             causal_base_legal: string;
             /**
              * @description La terminación de una ocasional protegida por embarazo o
