@@ -9,6 +9,7 @@ export type AutoridadElecta = {
   contrato_id: number
   servidor: { id: number | null; nombre: string; cedula: string | null }
   /** El puesto: Prefecto/a o Viceprefecto/a. */
+  puesto_id: number
   dignidad: string | null
   unidad: string | null
   desde: string | null
@@ -63,6 +64,22 @@ export type AutoridadEntrante = {
   aviso: string | null
 }
 
+/**
+ * Una dignidad de elección popular y quién la ocupa: lo único que puede
+ * elegir el formulario del inicio del período (fase 4.1).
+ */
+export type Dignidad = {
+  puesto_id: number
+  unidad_administrativa_id: number
+  dignidad: string | null
+  unidad: string | null
+  rmu: string | null
+  /** Quién la ocupa hoy, si alguien la ocupa. */
+  ocupada_por: string | null
+  /** Y hasta cuándo: el período que entra no empieza antes. */
+  ocupada_hasta: string | null
+}
+
 export type SubrogacionPorLeyData = {
   fecha_inicio: string
   fecha_fin: string
@@ -74,6 +91,11 @@ export type SubrogacionPorLeyData = {
 export const autoridadElectaService = {
   listar: () =>
     api.get<ApiResponse<AutoridadElecta[]>>('/expediente/autoridades-electas').then((r) => r.data.datos),
+
+  dignidades: () =>
+    api
+      .get<ApiResponse<Dignidad[]>>('/expediente/autoridades-electas/dignidades')
+      .then((r) => r.data.datos),
 
   entrantes: () =>
     api

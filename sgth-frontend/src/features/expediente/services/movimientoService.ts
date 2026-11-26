@@ -8,6 +8,25 @@ import type { ActualizarBorradorData, FiltrosBandeja, TransicionarData } from '.
 // Se reexportan para que quien los importaba de aquí no tenga que cambiar.
 export type { ActualizarBorradorData, FiltrosBandeja, TransicionarData }
 
+/** El cuerpo del inicio del período de una autoridad electa (fase 4.1). */
+export type ActoDeAutoridadData = {
+  clase: 'inicio_periodo'
+  causal: 'eleccion' | 'designacion_del_consejo'
+  descripcion: string
+  fecha_efectiva: string
+  unidad_destino_id: number
+  puesto_destino_id: number
+  remuneracion_propuesta: number | null
+  fecha_fin_propuesta?: string | null
+  credencial_cne_numero?: string | null
+  credencial_cne_fecha?: string | null
+  acta_posesion_numero?: string | null
+  acto_origen_numero?: string | null
+  acto_origen_fecha?: string | null
+  /** Siempre 'resolucion': es lo que emite el Consejo (COOTAD Art. 47 n). */
+  acto_origen_tipo?: 'resolucion'
+}
+
 /** Espeja las constantes de `AvisoFinancieroSancionService`. */
 export type AvisoFinanciero = 'enviado' | 'sin_destinatario' | 'fallo_envio'
 
@@ -18,6 +37,20 @@ export const movimientoService = {
         `/expediente/servidores/${servidorId}/movimientos`,
       )
       .then((r) => r.data.datos ?? []),
+
+  /**
+   * El inicio del período de una autoridad electa (fase 4.1).
+   *
+   * Tiene método propio porque su cuerpo no es el del formulario general: no
+   * lleva nombramiento, ni tipo de acto del Ministerio, ni firmantes. Pasarlo
+   * como un `MovimientoFormData` a medias obligaba a mentirle al tipo.
+   */
+  crearActoDeAutoridad: (servidorId: number, data: ActoDeAutoridadData) =>
+    api
+      .post<ApiResponse<MovimientoPersonal>>(
+        `/expediente/servidores/${servidorId}/movimientos`, data,
+      )
+      .then((r) => r.data.datos),
 
   crear: (servidorId: number, data: MovimientoFormData) =>
     api

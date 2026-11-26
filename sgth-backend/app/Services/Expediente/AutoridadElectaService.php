@@ -6,6 +6,7 @@ use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
 use App\Enums\EstadoSubrogacion;
 use App\Enums\MotivoSubrogacion;
+use App\Enums\RolPuesto;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoActoDeOrigen;
 use App\Enums\TipoEventoVinculo;
@@ -452,6 +453,9 @@ class AutoridadElectaService
                         'nombre' => trim(($contrato->servidor?->apellido ?? '').' '.($contrato->servidor?->nombre ?? '')),
                         'cedula' => $contrato->servidor?->cedula,
                     ],
+                    // El puesto, no solo su nombre: la reelección abre el
+                    // formulario con la misma dignidad ya elegida (fase 4.1).
+                    'puesto_id'       => $contrato->puesto_id,
                     'dignidad'        => $contrato->puesto?->cargo?->nombre,
                     'unidad'          => $contrato->unidadAdministrativa?->nombre,
                     'desde'           => $contrato->fecha_inicio?->toDateString(),
@@ -488,6 +492,53 @@ class AutoridadElectaService
                     'es_prefecto'     => $this->prefecto()?->id === $contrato->id,
                 ];
             })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Las dignidades de elección popular: la Prefectura y la Viceprefectura, y
+     * quién las ocupa hoy (fase 4.1).
+     *
+     * Las necesita el formulario del inicio del período, que no ofrece ningún
+     * otro puesto — es la misma regla que el servicio ya impone al registrar.
+     * Se reconoce una dignidad por el rol del puesto o, si no lo tiene, por el
+     * de su grado: `GrupoOcupacionalSeeder` marca NJS-10 (Prefecto/a) y NJS-7
+     * (Viceprefecto/a), y es ahí donde el dato existe seguro.
+     *
+     * Trae también al ocupante y hasta cuándo, porque el período que entra no
+     * puede empezar antes de que termine el suyo y el formulario lo dice antes
+     * de dejar enviar.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function dignidades(): array
+    {
+        return Puesto::query()
+            ->with(['cargo:id,nombre', 'unidadAdministrativa:id,nombre', 'grupoOcupacional'])
+            ->where('activo', true)
+            ->where(fn ($q) => $q
+                ->where('rol_puesto', RolPuesto::DIGNATARIO->value)
+                ->orWhereHas('grupoOcupacional', fn ($g) => $g->where('rol_puesto', RolPuesto::DIGNATARIO->value)))
+            ->get()
+            ->map(function (Puesto $puesto) {
+                $ocupante = ContratoServidor::with('servidor:id,nombre,apellido')
+                    ->where('puesto_id', $puesto->id)
+                    ->where('estado', EstadoContrato::VIGENTE->value)
+                    ->orderByDesc('fecha_inicio')
+                    ->first();
+
+                return [
+                    'puesto_id'                => $puesto->id,
+                    'unidad_administrativa_id' => $puesto->unidad_administrativa_id,
+                    'dignidad'                 => $puesto->cargo?->nombre,
+                    'unidad'                   => $puesto->unidadAdministrativa?->nombre,
+                    'rmu'                      => $puesto->grupoOcupacional?->rmu,
+                    'ocupada_por'              => $ocupante ? $this->nombreDe($ocupante->servidor) : null,
+                    'ocupada_hasta'            => $ocupante?->fecha_fin?->toDateString(),
+                ];
+            })
+            ->sortBy('dignidad')
             ->values()
             ->all();
     }

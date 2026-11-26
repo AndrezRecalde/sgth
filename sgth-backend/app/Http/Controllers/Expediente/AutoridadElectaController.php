@@ -25,6 +25,12 @@ class AutoridadElectaController extends Controller
         return ApiResponse::ok($this->autoridades->listar(), 'Autoridades electas en funciones.');
     }
 
+    /** Las dignidades que existen y quién las ocupa, para el formulario (4.1). */
+    public function dignidades(): JsonResponse
+    {
+        return ApiResponse::ok($this->autoridades->dignidades(), 'Dignidades de elección popular.');
+    }
+
     /** Las que entran: su período por empezar y a quién suceden (2026-10-21). */
     public function entrantes(): JsonResponse
     {
