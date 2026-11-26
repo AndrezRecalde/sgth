@@ -1,5 +1,5 @@
 import { Text } from '@mantine/core'
-import { IconCalendarEvent } from '@tabler/icons-react'
+import { IconCalendarEvent, IconFileText } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
@@ -40,10 +40,27 @@ function Ausencia({ a }: { a: AutoridadElecta }) {
 }
 
 /**
- * Lo que sigue: el cese en curso, el período nuevo de la autoridad reelegida,
- * o quien entra a su puesto cuando termina (2026-10-21).
+ * Lo que sigue: la dignidad que va a asumir, el cese en curso, el período
+ * nuevo de la autoridad reelegida, o quien entra a su puesto cuando termina
+ * (2026-10-21).
+ *
+ * La asunción va primero porque es la única que pide algo: mientras no se
+ * registre, la institución está sin autoridad nominadora.
  */
 function Siguiente({ a }: { a: AutoridadElecta }) {
+  if (a.asuncion) {
+    return (
+      <div>
+        {/* La insignia, corta como las vecinas: la dignidad no cabe dentro. */}
+        <StatusBadge tone="warning">Asunción</StatusBadge>
+        <Text size="xs">Asume {a.asuncion.dignidad ?? 'la Prefectura'}</Text>
+        <Text size="xs" c="dimmed">
+          {a.asuncion.codigo_registro ?? 'En trámite'} · desde el {formatFecha(a.asuncion.fecha_efectiva)}
+        </Text>
+      </div>
+    )
+  }
+
   if (a.cese) {
     return (
       <div>
@@ -85,11 +102,14 @@ interface Opciones {
   /** ¿Quien mira puede preparar acciones para ese servidor? */
   puedePreparar: (servidorId: number | null) => boolean
   onFijarFin: (a: AutoridadElecta) => void
+  /** Abre el acto en su cajón, que es donde se suscribe y se registra. */
+  onVerActo: (movimientoId: number) => void
 }
 
 export const getAutoridadElectaColumns = ({
   puedePreparar,
   onFijarFin,
+  onVerActo,
 }: Opciones): DataTableColumn<AutoridadElecta>[] => [
   {
     accessor: 'servidor',
@@ -145,6 +165,12 @@ export const getAutoridadElectaColumns = ({
             icon: <IconCalendarEvent size={14} />,
             onClick: () => onFijarFin(a),
             hidden: !a.puede_fijar_fin || !puedePreparar(a.servidor.id),
+          },
+          {
+            label: 'Completar la asunción',
+            icon: <IconFileText size={14} />,
+            onClick: () => a.asuncion && onVerActo(a.asuncion.id),
+            hidden: !a.asuncion,
           },
         ]}
       />

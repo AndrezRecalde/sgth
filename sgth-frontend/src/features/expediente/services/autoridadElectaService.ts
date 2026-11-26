@@ -33,6 +33,11 @@ export type AutoridadElecta = {
   ausencia: (ActoDelPeriodo & { desde: string | null; hasta: string | null }) | null
   /** Quién la subroga, o a quién subroga (fase 4.1b). */
   subrogacion: { rol: 'subrogado' | 'subrogante'; con: string; desde: string | null; hasta: string | null; estado: string } | null
+  /**
+   * La dignidad que va a asumir, cuando el Prefecto se fue para siempre y la
+   * asunción todavía no rige (COOTAD Art. 51; fase 4.1b).
+   */
+  asuncion: (ActoDelPeriodo & { dignidad: string | null }) | null
   es_prefecto: boolean
 }
 

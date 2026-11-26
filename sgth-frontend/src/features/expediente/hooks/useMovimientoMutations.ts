@@ -87,6 +87,13 @@ export function useMovimientoMutations() {
       // la cancela: la pantalla de subrogaciones seguía diciendo «Pendiente»
       // después de aprobarla, hasta que venciera su minuto de staleTime.
       qc.invalidateQueries({ queryKey: ['subrogaciones-vigentes'] })
+      // Y la pestaña de autoridades electas, que desde hoy es desde donde se
+      // completa la asunción definitiva. Faltaba: tiene un `staleTime` de un
+      // minuto, así que tras registrar la licencia del Prefecto o suscribir la
+      // asunción la tabla seguía diciendo lo de antes, y quien acababa de
+      // hacerlo concluía que no había pasado nada (hallazgo H6 de la prueba
+      // del 2026-11-26).
+      qc.invalidateQueries({ queryKey: ['autoridades-electas'] })
     },
     onError: (error) => {
       notificar.error(

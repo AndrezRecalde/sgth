@@ -443,6 +443,7 @@ class AutoridadElectaService
                 $sucesor = $this->sucesorDe($contrato, $inicios);
                 $ausencia = $this->ausenciaEnCurso($contrato);
                 $subrogacion = $this->subrogacionEnCurso($contrato);
+                $asuncion = $this->asuncionEnCurso($contrato);
 
                 return [
                     'contrato_id'     => $contrato->id,
@@ -478,6 +479,12 @@ class AutoridadElectaService
                     ] : null,
                     // Quién lo subroga, o a quién subroga (4.1b).
                     'subrogacion'     => $subrogacion,
+                    // La dignidad que va a asumir, cuando el Prefecto se fue
+                    // para siempre y esta asunción todavía no rige (4.1b).
+                    'asuncion'        => $asuncion ? [
+                        ...$this->resumen($asuncion),
+                        'dignidad' => Puesto::with('cargo')->find($asuncion->puesto_destino_id)?->cargo?->nombre,
+                    ] : null,
                     'es_prefecto'     => $this->prefecto()?->id === $contrato->id,
                 ];
             })
@@ -838,6 +845,28 @@ class AutoridadElectaService
             ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
             ->whereNull('efecto_aplicado_en')
             ->whereDate('fecha_efectiva', '>=', $contrato->fecha_inicio->toDateString())
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * La asunción definitiva que todavía no rige: el Viceprefecto que va a
+     * tomar la Prefectura porque su titular se fue para siempre (COOTAD
+     * Art. 51).
+     *
+     * La prepara sola el cese del Prefecto, y hasta el 2026-11-26 no se veía
+     * en ningún sitio: la columna «Lo que sigue» del Viceprefecto decía «—»
+     * mientras su asunción esperaba en la bandeja, así que nadie se enteraba
+     * de que había un relevo a medio hacer. Es el acto que deja a la
+     * institución sin autoridad nominadora mientras no se registre, así que es
+     * justo el que tiene que estar a la vista.
+     */
+    private function asuncionEnCurso(ContratoServidor $contrato): ?MovimientoPersonal
+    {
+        return MovimientoPersonal::where('servidor_id', $contrato->servidor_id)
+            ->where('tipo_movimiento', TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->whereNull('efecto_aplicado_en')
             ->orderByDesc('id')
             ->first();
     }

@@ -281,6 +281,47 @@ test('el cese anticipado del Prefecto prepara la asunción definitiva del Vicepr
         ->and((float) $this->vice->fresh('contratoVigente')->contratoVigente->remuneracion)->toBe(4048.0);
 });
 
+test('la asunción pendiente se ve en la pestaña, y el aviso de que no hay Prefecto', function () {
+    $cese = ($this->registrar)($this->servicio->registrar($this->prefecto->id, [
+        'tipo_movimiento'    => TipoMovimientoPersonal::CESACION_FUNCIONES->value,
+        'subtipo_movimiento' => SubtipoMovimientoPersonal::RENUNCIA->value,
+        'descripcion'        => 'Renuncia aceptada por el Consejo',
+        'fecha_efectiva'     => $this->hoy,
+        'resolucion_numero'  => 'RES-CP-2026-040',
+    ])->id);
+
+    $asuncion = MovimientoPersonal::where('movimiento_relacionado_id', $cese->id)
+        ->where('tipo_movimiento', TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value)
+        ->firstOrFail();
+
+    $filas = collect($this->getJson('/api/v1/expediente/autoridades-electas')->assertOk()->json('datos'))
+        ->keyBy('servidor.id');
+
+    // La fila del Viceprefecto decía «—» mientras su asunción esperaba en la
+    // bandeja: nadie se enteraba de que el relevo estaba a medio hacer.
+    expect($filas[$this->vice->id]['asuncion']['id'])->toBe($asuncion->id)
+        ->and($filas[$this->vice->id]['asuncion']['dignidad'])->toBe($this->puestoPrefecto->cargo?->nombre)
+        ->and($filas[$this->vice->id]['asuncion']['fecha_efectiva'])->toBe(now()->addDay()->toDateString())
+        // Y lo que lo hace urgente: ya no hay quien firme como autoridad
+        // nominadora. La pantalla lo avisa a partir de esto.
+        ->and($filas->every(fn (array $f) => $f['es_prefecto'] === false))->toBeTrue();
+
+    // Cuando surte efecto deja de ser «lo que sigue»: ya es su puesto. El
+    // documento va a mano porque esta rama sale de main; con el #675 la
+    // asunción lo hereda del cese y esta línea sobra.
+    $this->servicio->actualizarBorrador($asuncion, [
+        'fecha_efectiva'    => $this->hoy,
+        'resolucion_numero' => 'RES-CP-2026-041',
+    ]);
+    ($this->registrar)($asuncion->id);
+
+    $filas = collect($this->getJson('/api/v1/expediente/autoridades-electas')->assertOk()->json('datos'))
+        ->keyBy('servidor.id');
+
+    expect($filas[$this->vice->id]['asuncion'])->toBeNull()
+        ->and($filas[$this->vice->id]['es_prefecto'])->toBeTrue();
+});
+
 test('el fin del período no prepara asunción: termina también el del Viceprefecto', function () {
     ContratoServidor::where('servidor_id', $this->prefecto->id)->update(['fecha_fin' => now()->subDay()->toDateString()]);
 
