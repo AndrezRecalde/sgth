@@ -29,7 +29,13 @@ class ClaseAccionPersonalResource extends JsonResource
             'codigo'                      => $clase,
             'etiqueta'                    => $clase->etiqueta(),
             'familia'                     => $clase->familia(),
-            'se_crea_desde_formulario'    => $clase->seCreaDesdeElFormulario(),
+            // Responde si el formulario general la ofrece y la corrige, que
+            // desde el 2026-11-26 no es lo mismo que si el endpoint la acepta:
+            // los actos de una autoridad se crean por la misma ruta desde su
+            // pestaña (`seCreaDesdeElFormulario()`), pero este formulario ya
+            // no los enseña.
+            'se_crea_desde_formulario'    => $clase->seOfreceEnElFormularioGeneral(),
+            'es_de_autoridad_electa'      => $clase->esDeAutoridadElecta(),
             'requiere_vinculo'            => $clase->requiereVinculo(),
             /** @var list<TipoNombramiento> */
             'nombramientos_elegibles'     => $clase->nombramientosElegibles(),

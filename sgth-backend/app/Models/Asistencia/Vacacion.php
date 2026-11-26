@@ -39,6 +39,9 @@ class Vacacion extends Model
         'unidad_administrativa_id',
         'persona_reemplaza_id',
         'observacion',
+        // La resolución del Consejo Provincial, solo en las de una autoridad
+        // electa: a ellas no se las autoriza un jefe (fase 4.1d).
+        'resolucion_numero',
         'anulado_por',
         'anulado_en',
         'motivo_anulacion',

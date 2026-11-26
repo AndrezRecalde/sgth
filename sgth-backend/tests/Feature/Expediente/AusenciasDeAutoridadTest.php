@@ -254,13 +254,9 @@ test('el cese anticipado del Prefecto prepara la asunción definitiva del Vicepr
     expect($asuncion->servidor_id)->toBe($this->vice->id)
         ->and($asuncion->puesto_destino_id)->toBe($this->puestoPrefecto->id)
         ->and($asuncion->fecha_efectiva->toDateString())->toBe(now()->addDay()->toDateString())
-        ->and($asuncion->instrumento)->toBe(InstrumentoActo::ACTO_AUTORIDAD)
-        // Nace con el documento del cese [TH, 2026-11-26]: sin él se quedaba
-        // en borrador para siempre, porque al suscribir se exige y ninguna
-        // pantalla lo dejaba escribir (hallazgo H15).
-        ->and($asuncion->resolucion_numero)->toBe('RES-CP-2026-020');
+        ->and($asuncion->instrumento)->toBe(InstrumentoActo::ACTO_AUTORIDAD);
 
-    // Talento Humano cambia la resolución del Consejo y lo registra.
+    // Talento Humano completa la resolución del Consejo y lo registra.
     $this->servicio->actualizarBorrador($asuncion, ['resolucion_numero' => 'RES-CP-2026-021', 'fecha_efectiva' => $this->hoy]);
     ($this->registrar)($asuncion->id);
 
@@ -283,6 +279,43 @@ test('el cese anticipado del Prefecto prepara la asunción definitiva del Vicepr
 
     expect($this->vice->fresh('contratoVigente')->contratoVigente->puesto_id)->toBe($this->puestoVice->id)
         ->and((float) $this->vice->fresh('contratoVigente')->contratoVigente->remuneracion)->toBe(4048.0);
+});
+
+test('la asunción pendiente se ve en la pestaña, y el aviso de que no hay Prefecto', function () {
+    $cese = ($this->registrar)($this->servicio->registrar($this->prefecto->id, [
+        'tipo_movimiento'    => TipoMovimientoPersonal::CESACION_FUNCIONES->value,
+        'subtipo_movimiento' => SubtipoMovimientoPersonal::RENUNCIA->value,
+        'descripcion'        => 'Renuncia aceptada por el Consejo',
+        'fecha_efectiva'     => $this->hoy,
+        'resolucion_numero'  => 'RES-CP-2026-040',
+    ])->id);
+
+    $asuncion = MovimientoPersonal::where('movimiento_relacionado_id', $cese->id)
+        ->where('tipo_movimiento', TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value)
+        ->firstOrFail();
+
+    $filas = collect($this->getJson('/api/v1/expediente/autoridades-electas')->assertOk()->json('datos'))
+        ->keyBy('servidor.id');
+
+    // La fila del Viceprefecto decía «—» mientras su asunción esperaba en la
+    // bandeja: nadie se enteraba de que el relevo estaba a medio hacer.
+    expect($filas[$this->vice->id]['asuncion']['id'])->toBe($asuncion->id)
+        ->and($filas[$this->vice->id]['asuncion']['dignidad'])->toBe($this->puestoPrefecto->cargo?->nombre)
+        ->and($filas[$this->vice->id]['asuncion']['fecha_efectiva'])->toBe(now()->addDay()->toDateString())
+        // Y lo que lo hace urgente: ya no hay quien firme como autoridad
+        // nominadora. La pantalla lo avisa a partir de esto.
+        ->and($filas->every(fn (array $f) => $f['es_prefecto'] === false))->toBeTrue();
+
+    // Cuando surte efecto deja de ser «lo que sigue»: ya es su puesto. El
+    // documento no se toca: desde el #675 la asunción lo hereda del cese.
+    $this->servicio->actualizarBorrador($asuncion, ['fecha_efectiva' => $this->hoy]);
+    ($this->registrar)($asuncion->id);
+
+    $filas = collect($this->getJson('/api/v1/expediente/autoridades-electas')->assertOk()->json('datos'))
+        ->keyBy('servidor.id');
+
+    expect($filas[$this->vice->id]['asuncion'])->toBeNull()
+        ->and($filas[$this->vice->id]['es_prefecto'])->toBeTrue();
 });
 
 test('la asunción se suscribe con el documento que heredó, sin tocar nada más', function () {

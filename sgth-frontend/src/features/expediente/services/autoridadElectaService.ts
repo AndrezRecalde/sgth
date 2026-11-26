@@ -9,6 +9,7 @@ export type AutoridadElecta = {
   contrato_id: number
   servidor: { id: number | null; nombre: string; cedula: string | null }
   /** El puesto: Prefecto/a o Viceprefecto/a. */
+  puesto_id: number
   dignidad: string | null
   unidad: string | null
   desde: string | null
@@ -33,6 +34,11 @@ export type AutoridadElecta = {
   ausencia: (ActoDelPeriodo & { desde: string | null; hasta: string | null }) | null
   /** Quién la subroga, o a quién subroga (fase 4.1b). */
   subrogacion: { rol: 'subrogado' | 'subrogante'; con: string; desde: string | null; hasta: string | null; estado: string } | null
+  /**
+   * La dignidad que va a asumir, cuando el Prefecto se fue para siempre y la
+   * asunción todavía no rige (COOTAD Art. 51; fase 4.1b).
+   */
+  asuncion: (ActoDelPeriodo & { dignidad: string | null }) | null
   es_prefecto: boolean
 }
 
@@ -58,6 +64,22 @@ export type AutoridadEntrante = {
   aviso: string | null
 }
 
+/**
+ * Una dignidad de elección popular y quién la ocupa: lo único que puede
+ * elegir el formulario del inicio del período (fase 4.1).
+ */
+export type Dignidad = {
+  puesto_id: number
+  unidad_administrativa_id: number
+  dignidad: string | null
+  unidad: string | null
+  rmu: string | null
+  /** Quién la ocupa hoy, si alguien la ocupa. */
+  ocupada_por: string | null
+  /** Y hasta cuándo: el período que entra no empieza antes. */
+  ocupada_hasta: string | null
+}
+
 export type SubrogacionPorLeyData = {
   fecha_inicio: string
   fecha_fin: string
@@ -66,9 +88,21 @@ export type SubrogacionPorLeyData = {
   observacion?: string | null
 }
 
+export type VacacionesDeAutoridadData = {
+  fecha_inicio: string
+  fecha_fin: string
+  resolucion_numero: string
+  observacion?: string | null
+}
+
 export const autoridadElectaService = {
   listar: () =>
     api.get<ApiResponse<AutoridadElecta[]>>('/expediente/autoridades-electas').then((r) => r.data.datos),
+
+  dignidades: () =>
+    api
+      .get<ApiResponse<Dignidad[]>>('/expediente/autoridades-electas/dignidades')
+      .then((r) => r.data.datos),
 
   entrantes: () =>
     api
@@ -81,6 +115,21 @@ export const autoridadElectaService = {
       .post<ApiResponse<{ subrogacion_id: number; movimiento_id: number | null }>>(
         '/expediente/autoridades-electas/subrogacion-por-ley',
         data,
+      )
+      .then((r) => r.data.datos),
+
+  /**
+   * Las vacaciones que le concede el Consejo (COOTAD Art. 47 s; fase 4.1d).
+   *
+   * No quedan en borrador como los actos de autoridad: la resolución es la
+   * autorización y el papel firmado a la vez, así que los días salen del saldo
+   * en el momento.
+   */
+  registrarVacaciones: (servidorId: number, data: VacacionesDeAutoridadData) =>
+    api
+      .post<ApiResponse<{ vacacion_id: number; folio: string | null; dias: number }>>(
+        '/expediente/autoridades-electas/vacaciones',
+        { servidor_id: servidorId, ...data },
       )
       .then((r) => r.data.datos),
 

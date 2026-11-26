@@ -5,7 +5,10 @@ namespace App\Services\Expediente;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
 use App\Enums\EstadoSubrogacion;
+use App\Enums\EstadoVacacion;
 use App\Enums\MotivoSubrogacion;
+use App\Enums\MotivoVacacion;
+use App\Enums\RolPuesto;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoActoDeOrigen;
 use App\Enums\TipoEventoVinculo;
@@ -13,12 +16,15 @@ use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Enums\TipoSubrogacion;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Asistencia\Vacacion;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
+use App\Models\User;
+use App\Services\Asistencia\VacacionService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +42,11 @@ use Illuminate\Support\Facades\DB;
  *
  * Desde la 4.1b, también sus ausencias y su reemplazo: la licencia que concede
  * el Consejo, la subrogación por ley del Viceprefecto y su asunción definitiva.
- * Las vacaciones siguen en Asistencia, como las de todos [TH N11].
+ * Y desde la 4.1d sus vacaciones: **siguen siendo de Asistencia y sin acción de
+ * personal** [TH N11], pero **se las concede el Consejo por resolución, dentro
+ * de los mismos 60 días** [TH D4, 2026-11-26]. Las dos respuestas conviven: la
+ * primera dice qué se escribe —una solicitud de vacaciones, no un acto—, la
+ * segunda quién autoriza.
  *
  * Y el relevo (2026-10-21): quien entra a un puesto de autoridad sucede a
  * quien lo ocupa, cuyo período tiene que terminar a más tardar ese día. Las
@@ -443,6 +453,7 @@ class AutoridadElectaService
                 $sucesor = $this->sucesorDe($contrato, $inicios);
                 $ausencia = $this->ausenciaEnCurso($contrato);
                 $subrogacion = $this->subrogacionEnCurso($contrato);
+                $asuncion = $this->asuncionEnCurso($contrato);
 
                 return [
                     'contrato_id'     => $contrato->id,
@@ -451,6 +462,9 @@ class AutoridadElectaService
                         'nombre' => trim(($contrato->servidor?->apellido ?? '').' '.($contrato->servidor?->nombre ?? '')),
                         'cedula' => $contrato->servidor?->cedula,
                     ],
+                    // El puesto, no solo su nombre: la reelección abre el
+                    // formulario con la misma dignidad ya elegida (fase 4.1).
+                    'puesto_id'       => $contrato->puesto_id,
                     'dignidad'        => $contrato->puesto?->cargo?->nombre,
                     'unidad'          => $contrato->unidadAdministrativa?->nombre,
                     'desde'           => $contrato->fecha_inicio?->toDateString(),
@@ -478,9 +492,62 @@ class AutoridadElectaService
                     ] : null,
                     // Quién lo subroga, o a quién subroga (4.1b).
                     'subrogacion'     => $subrogacion,
+                    // La dignidad que va a asumir, cuando el Prefecto se fue
+                    // para siempre y esta asunción todavía no rige (4.1b).
+                    'asuncion'        => $asuncion ? [
+                        ...$this->resumen($asuncion),
+                        'dignidad' => Puesto::with('cargo')->find($asuncion->puesto_destino_id)?->cargo?->nombre,
+                    ] : null,
                     'es_prefecto'     => $this->prefecto()?->id === $contrato->id,
                 ];
             })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Las dignidades de elección popular: la Prefectura y la Viceprefectura, y
+     * quién las ocupa hoy (fase 4.1).
+     *
+     * Las necesita el formulario del inicio del período, que no ofrece ningún
+     * otro puesto — es la misma regla que el servicio ya impone al registrar.
+     * Se reconoce una dignidad por el rol del puesto o, si no lo tiene, por el
+     * de su grado: `GrupoOcupacionalSeeder` marca NJS-10 (Prefecto/a) y NJS-7
+     * (Viceprefecto/a), y es ahí donde el dato existe seguro.
+     *
+     * Trae también al ocupante y hasta cuándo, porque el período que entra no
+     * puede empezar antes de que termine el suyo y el formulario lo dice antes
+     * de dejar enviar.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function dignidades(): array
+    {
+        return Puesto::query()
+            ->with(['cargo:id,nombre', 'unidadAdministrativa:id,nombre', 'grupoOcupacional'])
+            ->where('activo', true)
+            ->where(fn ($q) => $q
+                ->where('rol_puesto', RolPuesto::DIGNATARIO->value)
+                ->orWhereHas('grupoOcupacional', fn ($g) => $g->where('rol_puesto', RolPuesto::DIGNATARIO->value)))
+            ->get()
+            ->map(function (Puesto $puesto) {
+                $ocupante = ContratoServidor::with('servidor:id,nombre,apellido')
+                    ->where('puesto_id', $puesto->id)
+                    ->where('estado', EstadoContrato::VIGENTE->value)
+                    ->orderByDesc('fecha_inicio')
+                    ->first();
+
+                return [
+                    'puesto_id'                => $puesto->id,
+                    'unidad_administrativa_id' => $puesto->unidad_administrativa_id,
+                    'dignidad'                 => $puesto->cargo?->nombre,
+                    'unidad'                   => $puesto->unidadAdministrativa?->nombre,
+                    'rmu'                      => $puesto->grupoOcupacional?->rmu,
+                    'ocupada_por'              => $ocupante ? $this->nombreDe($ocupante->servidor) : null,
+                    'ocupada_hasta'            => $ocupante?->fecha_fin?->toDateString(),
+                ];
+            })
+            ->sortBy('dignidad')
             ->values()
             ->all();
     }
@@ -607,23 +674,133 @@ class AutoridadElectaService
             return;
         }
 
-        $otras = MovimientoPersonal::where('servidor_id', $servidor->id)
+        $this->exigirTopeDelConsejo(
+            $servidor, $inicio, $fin, 'licencia del Consejo',
+            exceptoLicencia: $excepto,
+        );
+    }
+
+    /**
+     * Las vacaciones de una autoridad electa (fase 4.1d).
+     *
+     * **Se las concede el Consejo Provincial por resolución, dentro de los 60
+     * días** del COOTAD Art. 47 s [TH D4]. No hay jefe inmediato que las
+     * autorice ni papel que baje a ventanilla: la resolución es las dos cosas,
+     * así que la solicitud nace y se registra de una vez.
+     *
+     * Siguen siendo una solicitud de vacaciones y no un acto de autoridad [TH
+     * N11]: descuentan del mismo saldo, con los mismos períodos, el mismo
+     * conteo de días calendario y los mismos cruces que las de cualquiera.
+     * Que las conceda el Consejo no multiplica el derecho.
+     *
+     * @param  array{fecha_inicio: string, fecha_fin: string, resolucion_numero: string, observacion?: ?string}  $datos
+     */
+    public function registrarVacaciones(Servidor $servidor, array $datos, User $registra): Vacacion
+    {
+        if (! $this->esAutoridadElecta($servidor)) {
+            throw new ReglaNegocioException(
+                'Esta pantalla registra las vacaciones que el Consejo concede a una autoridad electa en funciones. '
+                    .'Las de un servidor se registran en «Vacaciones».'
+            );
+        }
+
+        if (blank($datos['resolucion_numero'] ?? null)) {
+            throw new ReglaNegocioException(
+                'Indique la resolución del Consejo Provincial que le concede las vacaciones.'
+            );
+        }
+
+        if (blank($datos['fecha_inicio'] ?? null) || blank($datos['fecha_fin'] ?? null)) {
+            throw new ReglaNegocioException('Indique desde y hasta cuándo son las vacaciones.');
+        }
+
+        $inicio = Carbon::parse($datos['fecha_inicio'])->startOfDay();
+        $fin = Carbon::parse($datos['fecha_fin'])->startOfDay();
+
+        if ($fin->lt($inicio)) {
+            throw new ReglaNegocioException('Las vacaciones terminan después de empezar.');
+        }
+
+        $this->exigirTopeDelConsejo($servidor, $inicio, $fin, 'vacaciones');
+
+        return DB::transaction(function () use ($servidor, $datos, $inicio, $fin, $registra) {
+            $vacaciones = app(VacacionService::class);
+
+            // El segundo tope —sus días acumulados— y los cruces los comprueba
+            // el módulo de Vacaciones, que es el que los sabe. `por_resolucion`
+            // es lo que le dice que esta sí pasa: la vía ordinaria le está
+            // cerrada a una autoridad justamente para que no se salte al
+            // Consejo (fase 4.1d).
+            $vacacion = $vacaciones->solicitar([
+                'motivo'             => MotivoVacacion::VACACIONES_ANUALES->value,
+                'fecha_inicio'       => $inicio->toDateString(),
+                'fecha_fin'          => $fin->toDateString(),
+                'observacion'        => $datos['observacion'] ?? null,
+                'resolucion_numero'  => trim((string) $datos['resolucion_numero']),
+                'creado_por'         => $registra->id,
+                'por_resolucion'     => true,
+            ], $servidor->id);
+
+            // La resolución es la autorización y el papel firmado a la vez: no
+            // hay nada que esperar en ventanilla, así que los días salen ya.
+            return $vacaciones->registrar($vacacion->id, $registra);
+        });
+    }
+
+    /** ¿Tiene vínculo vigente de elección popular? */
+    public function esAutoridadElecta(Servidor $servidor): bool
+    {
+        return $servidor->contratoVigente?->tipo_nombramiento === TipoNombramiento::ELECCION_POPULAR;
+    }
+
+    /**
+     * El tope del COOTAD Art. 47 s: **60 días al año**, y es uno solo para todo
+     * lo que concede el Consejo. Desde la fase 4.1d suma las licencias **y las
+     * vacaciones**: son dos permisos de la misma mano, y contarlos por separado
+     * dejaba conceder 120.
+     *
+     * Se cuenta año por año porque un permiso puede cruzar el 31 de diciembre,
+     * y el tope es anual.
+     */
+    private function exigirTopeDelConsejo(
+        Servidor $servidor,
+        Carbon $inicio,
+        Carbon $fin,
+        string $queEs,
+        ?int $exceptoLicencia = null,
+        ?int $exceptoVacacion = null,
+    ): void {
+        $licencias = MovimientoPersonal::where('servidor_id', $servidor->id)
             ->where('tipo_movimiento', TipoMovimientoPersonal::LICENCIA_CONSEJO->value)
             ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
-            ->when($excepto, fn ($q) => $q->where('id', '!=', $excepto))
+            ->when($exceptoLicencia, fn ($q) => $q->where('id', '!=', $exceptoLicencia))
+            ->get();
+
+        // Las que concedió el Consejo son las que llevan su resolución. Las
+        // que esta misma autoridad pudiera tener registradas por la vía
+        // ordinaria —de antes de que se le cerrara— no cuentan: nadie del
+        // Consejo las concedió, y sumarlas bloquearía las que sí corresponden.
+        $vacaciones = Vacacion::where('servidor_id', $servidor->id)
+            ->whereNotNull('resolucion_numero')
+            ->where('estado', '!=', EstadoVacacion::ANULADA->value)
+            ->when($exceptoVacacion, fn ($q) => $q->where('id', '!=', $exceptoVacacion))
             ->get();
 
         for ($anio = $inicio->year; $anio <= $fin->year; $anio++) {
             $dias = $this->diasEnElAnio($inicio, $fin, $anio)
-                + $otras->sum(fn (MovimientoPersonal $l) => $l->fecha_inicio && $l->finEfectivo()
+                + $licencias->sum(fn (MovimientoPersonal $l) => $l->fecha_inicio && $l->finEfectivo()
                     ? $this->diasEnElAnio($l->fecha_inicio->copy()->startOfDay(), $l->finEfectivo()->copy()->startOfDay(), $anio)
+                    : 0)
+                + $vacaciones->sum(fn (Vacacion $v) => $v->fecha_inicio && $v->fecha_fin
+                    ? $this->diasEnElAnio($v->fecha_inicio->copy()->startOfDay(), $v->fecha_fin->copy()->startOfDay(), $anio)
                     : 0);
 
             if ($dias > self::DIAS_DE_LICENCIA_AL_ANIO) {
                 throw new ReglaNegocioException(
-                    "En {$anio} la autoridad sumaría {$dias} días de licencia del Consejo: el tope es "
-                        .self::DIAS_DE_LICENCIA_AL_ANIO.' al año (COOTAD Art. 47 s). Si el Consejo la prorrogó por '
-                        .'enfermedad catastrófica o calamidad doméstica, indique la causa.'
+                    "En {$anio} la autoridad sumaría {$dias} días concedidos por el Consejo entre licencias y "
+                        ."vacaciones, y estas {$queEs} no caben: el tope es ".self::DIAS_DE_LICENCIA_AL_ANIO
+                        .' al año (COOTAD Art. 47 s). Si el Consejo prorrogó una licencia por enfermedad '
+                        .'catastrófica o calamidad doméstica, indique la causa al registrarla.'
                 );
             }
         }
@@ -847,6 +1024,28 @@ class AutoridadElectaService
             ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
             ->whereNull('efecto_aplicado_en')
             ->whereDate('fecha_efectiva', '>=', $contrato->fecha_inicio->toDateString())
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * La asunción definitiva que todavía no rige: el Viceprefecto que va a
+     * tomar la Prefectura porque su titular se fue para siempre (COOTAD
+     * Art. 51).
+     *
+     * La prepara sola el cese del Prefecto, y hasta el 2026-11-26 no se veía
+     * en ningún sitio: la columna «Lo que sigue» del Viceprefecto decía «—»
+     * mientras su asunción esperaba en la bandeja, así que nadie se enteraba
+     * de que había un relevo a medio hacer. Es el acto que deja a la
+     * institución sin autoridad nominadora mientras no se registre, así que es
+     * justo el que tiene que estar a la vista.
+     */
+    private function asuncionEnCurso(ContratoServidor $contrato): ?MovimientoPersonal
+    {
+        return MovimientoPersonal::where('servidor_id', $contrato->servidor_id)
+            ->where('tipo_movimiento', TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->whereNull('efecto_aplicado_en')
             ->orderByDesc('id')
             ->first();
     }
