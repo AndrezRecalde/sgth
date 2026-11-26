@@ -9,6 +9,7 @@ import { usePuedePrepararAcciones } from '../hooks/usePuedePrepararAccion'
 import type { AutoridadElecta } from '../services/autoridadElectaService'
 import { getAutoridadElectaColumns } from './autoridadesElectas.columns'
 import { getAutoridadEntranteColumns } from './autoridadesEntrantes.columns'
+import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
 import { FinDelPeriodoModal } from './FinDelPeriodoModal'
 import { SubrogacionPorLeyModal } from './SubrogacionPorLeyModal'
 
@@ -30,13 +31,24 @@ export function AutoridadesElectasPanel() {
   const puedePreparar = usePuedePrepararAcciones()
   const [aFijar, setAFijar] = React.useState<AutoridadElecta | null>(null)
   const [subrogar, setSubrogar] = React.useState(false)
+  const [actoVisto, setActoVisto] = React.useState<number | null>(null)
 
-  const columns = getAutoridadElectaColumns({ puedePreparar, onFijarFin: setAFijar })
+  const columns = getAutoridadElectaColumns({ puedePreparar, onFijarFin: setAFijar, onVerActo: setActoVisto })
   const columnasEntrantes = getAutoridadEntranteColumns()
   const relevosSinCuadrar = entrantes.filter((e) => e.aviso)
   // Con Prefecto y sin nadie más en funciones, la Viceprefectura está vacante:
   // tras la asunción o la renuncia, el Consejo designa al nuevo (2026-10-20).
   const sinViceprefecto = autoridades.some((a) => a.es_prefecto) && autoridades.every((a) => a.es_prefecto)
+  /*
+  | Y el aviso inverso, que es el que de verdad urge: sin Prefecto no hay
+  | autoridad nominadora, y ninguna acción de personal —de nadie— se puede
+  | suscribir. Pasa entre el cese de uno y la asunción del otro, y hasta ahora
+  | la pantalla no lo decía en ninguna parte.
+  |
+  | Con la lista vacía no se pinta: ya lo dice el estado vacío de la tabla.
+  */
+  const sinPrefecto = autoridades.length > 0 && autoridades.every((a) => !a.es_prefecto)
+  const asuncionEnTramite = autoridades.find((a) => a.asuncion)
 
   return (
     <Stack gap="md">
@@ -60,6 +72,26 @@ export function AutoridadesElectasPanel() {
           {e.aviso}
         </Alert>
       ))}
+
+      {sinPrefecto && (
+        <Alert variant="light" color="red" icon={<IconAlertTriangle size={16} />} title="No hay Prefecto en funciones">
+          {asuncionEnTramite?.asuncion ? (
+            <>
+              El Viceprefecto {asuncionEnTramite.servidor.nombre} asume hasta terminar el período (COOTAD
+              Art. 51), pero su acto sigue{' '}
+              {asuncionEnTramite.asuncion.codigo_registro ? 'sin surtir efecto' : 'en trámite'}. Complételo
+              desde «Lo que sigue»: mientras tanto <b>ninguna acción de personal se puede suscribir</b>, porque
+              es el Prefecto quien firma como autoridad nominadora.
+            </>
+          ) : (
+            <>
+              Ninguna acción de personal se puede suscribir mientras no lo haya: es quien firma como autoridad
+              nominadora. Si el anterior cesó, registre la asunción definitiva del Viceprefecto (COOTAD Art. 51)
+              o el inicio del período de quien entra.
+            </>
+          )}
+        </Alert>
+      )}
 
       {sinViceprefecto && (
         <Alert variant="light" color="amber" icon={<IconInfoCircle size={16} />} title="No hay Viceprefecto en funciones">
@@ -109,6 +141,12 @@ export function AutoridadesElectasPanel() {
           <SgthTable records={entrantes} columns={columnasEntrantes} idAccessor="movimiento_id" minHeight={120} />
         </Stack>
       )}
+
+      <AccionPersonalDetalleDrawer
+        opened={actoVisto !== null}
+        movimientoId={actoVisto}
+        onClose={() => setActoVisto(null)}
+      />
 
       <FinDelPeriodoModal opened={!!aFijar} onClose={() => setAFijar(null)} autoridad={aFijar} />
       <SubrogacionPorLeyModal opened={subrogar} onClose={() => setSubrogar(false)} />
