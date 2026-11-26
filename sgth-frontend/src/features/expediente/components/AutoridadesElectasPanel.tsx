@@ -4,6 +4,7 @@ import React from 'react'
 import { Alert, Button, Group, Stack, Text } from '@mantine/core'
 import { IconAlertTriangle, IconBuildingBank, IconInfoCircle, IconUserCheck, IconUserPlus, IconUserShare } from '@tabler/icons-react'
 import { DataState, SectionHeading, SgthTable } from '@/components/ui'
+import { useAuth } from '@/hooks/useAuth'
 import { useAutoridadesElectas, useAutoridadesEntrantes } from '../hooks/useAutoridadesElectas'
 import { usePuedePrepararAcciones } from '../hooks/usePuedePrepararAccion'
 import type { AutoridadElecta } from '../services/autoridadElectaService'
@@ -15,6 +16,7 @@ import { FinDelPeriodoModal } from './FinDelPeriodoModal'
 import { LicenciaDelConsejoModal } from './LicenciaDelConsejoModal'
 import { InicioDelPeriodoModal } from './InicioDelPeriodoModal'
 import { SubrogacionPorLeyModal } from './SubrogacionPorLeyModal'
+import { VacacionesDeAutoridadModal } from './VacacionesDeAutoridadModal'
 
 /**
  * El Prefecto y el Viceprefecto en funciones y su período (diseño, 9.14; TH
@@ -32,12 +34,14 @@ export function AutoridadesElectasPanel() {
   const { data: autoridades = [], isLoading, error, refetch } = useAutoridadesElectas()
   const { data: entrantes = [], error: errorEntrantes } = useAutoridadesEntrantes()
   const puedePreparar = usePuedePrepararAcciones()
+  const { hasPermiso } = useAuth()
   const [aFijar, setAFijar] = React.useState<AutoridadElecta | null>(null)
   const [subrogar, setSubrogar] = React.useState(false)
   const [actoVisto, setActoVisto] = React.useState<number | null>(null)
   const [iniciar, setIniciar] = React.useState(false)
   const [reelegir, setReelegir] = React.useState<AutoridadElecta | null>(null)
   const [conLicencia, setConLicencia] = React.useState<AutoridadElecta | null>(null)
+  const [conVacaciones, setConVacaciones] = React.useState<AutoridadElecta | null>(null)
   const [aCesar, setACesar] = React.useState<AutoridadElecta | null>(null)
 
   const columns = getAutoridadElectaColumns({
@@ -46,6 +50,10 @@ export function AutoridadesElectasPanel() {
     onVerActo: setActoVisto,
     onReelegir: setReelegir,
     onLicencia: setConLicencia,
+    // Registrar vacaciones mueve el saldo: es de quien las aprueba, no solo
+    // de quien prepara acciones (fase 4.1d).
+    puedeRegistrarVacaciones: hasPermiso('aprobar-vacaciones'),
+    onVacaciones: setConVacaciones,
     onCesar: setACesar,
   })
   const columnasEntrantes = getAutoridadEntranteColumns()
@@ -183,6 +191,12 @@ export function AutoridadesElectasPanel() {
         opened={!!conLicencia}
         onClose={() => setConLicencia(null)}
         autoridad={conLicencia}
+      />
+
+      <VacacionesDeAutoridadModal
+        opened={!!conVacaciones}
+        onClose={() => setConVacaciones(null)}
+        autoridad={conVacaciones}
       />
 
       <CesacionDeAutoridadModal

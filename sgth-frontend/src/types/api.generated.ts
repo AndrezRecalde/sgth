@@ -570,6 +570,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * El consolidado en Excel. Era un CSV sin título ni período y con la
+         *     cédula expuesta a perder el cero; ver `ConsolidadoPermisosExport`
+         */
         get: operations["sso.ausentismo.excel"];
         put?: never;
         post?: never;
@@ -586,6 +590,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * El consolidado en PDF, en el estilo de los documentos institucionales
+         *     (2026-11-24): A4 apaisado como los demás listados, membrete y pie fijos
+         *     en cada hoja y los títulos de columna repetidos si pasa a otra
+         */
         get: operations["sso.ausentismo.pdf"];
         put?: never;
         post?: never;
@@ -692,6 +701,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/autoridades-electas/dignidades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las dignidades que existen y quién las ocupa, para el formulario (4.1) */
+        get: operations["autoridadElecta.dignidades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/contratos/{contrato}/fin-del-periodo": {
         parameters: {
             query?: never;
@@ -724,6 +750,27 @@ export interface paths {
          *     de cualquier acción
          */
         post: operations["autoridadElecta.subrogacionPorLey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/autoridades-electas/vacaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registra las vacaciones que el Consejo le concede a una autoridad electa
+         *     (COOTAD Art. 47 s; fase 4.1d). La resolución es la autorización y el
+         *     papel firmado a la vez, así que los días salen del saldo de una vez
+         */
+        post: operations["autoridadElecta.vacaciones"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2328,6 +2375,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * El consolidado en Excel. Era un CSV sin título ni período y con la
+         *     cédula expuesta a perder el cero; ver `ConsolidadoPermisosExport`
+         */
         get: operations["asistencia.consolidado.excel"];
         put?: never;
         post?: never;
@@ -2344,6 +2395,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * El consolidado en PDF, en el estilo de los documentos institucionales
+         *     (2026-11-24): A4 apaisado como los demás listados, membrete y pie fijos
+         *     en cada hoja y los títulos de columna repetidos si pasa a otra
+         */
         get: operations["asistencia.consolidado.pdf"];
         put?: never;
         post?: never;
@@ -5112,6 +5168,29 @@ export interface paths {
             cookie?: never;
         };
         get: operations["viaticos.comprobante.generar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/{identificador}/orden-anticipo/generar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La orden de pago del anticipo
+         * @description A diferencia de los otros tres, este documento no lo abre cualquiera que
+         *     vea el viático: lo firma quien lo genera, así que solo lo emite quien
+         *     opera los viáticos. Si lo abriera el propio viajero, quedaría sellado
+         *     como el funcionario que preparó su pago.
+         */
+        get: operations["viaticos.orden-anticipo.generar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -10672,7 +10751,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/asistencia/vacaciones/{id}": {
+    "/v1/asistencia/vacaciones/{id}/registrar": {
         parameters: {
             query?: never;
             header?: never;
@@ -10680,8 +10759,13 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["vacacion.update"];
-        post?: never;
+        put?: never;
+        /**
+         * Talento Humano registra la solicitud que recibe firmada en ventanilla
+         * @description Sin cuerpo: ya no se manda un estado a elegir. El único camino hacia
+         *     adelante es registrarla, y el único hacia atrás, anularla con motivo.
+         */
+        post: operations["asistencia.vacaciones.registrar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10698,7 +10782,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Anula una pendiente, o una aprobada que aún no comienza
+         * Anula una autorizada, o una registrada que aún no comienza
          * @description El mensaje dice cuántos días volvieron al saldo: es lo que quien anula
          *     necesita comprobar, y no se ve en la fila de la solicitud.
          */
@@ -11966,7 +12050,15 @@ export interface components {
             /** @enum {string} */
             etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva" | "Adenda al contrato" | "Cambio de Lugar de Trabajo" | "Traspaso de Puesto" | "Revisión de la Clasificación";
             familia: components["schemas"]["FamiliaAccionPersonal"];
+            /**
+             * @description Responde si el formulario general la ofrece y la corrige, que
+             *     desde el 2026-11-26 no es lo mismo que si el endpoint la acepta:
+             *     los actos de una autoridad se crean por la misma ruta desde su
+             *     pestaña (`seCreaDesdeElFormulario()`), pero este formulario ya
+             *     no los enseña.
+             */
             se_crea_desde_formulario: boolean;
+            es_de_autoridad_electa: boolean;
             requiere_vinculo: boolean;
             nombramientos_elegibles: components["schemas"]["TipoNombramiento"][];
             causales: components["schemas"]["CausalAccionPersonalResource"][];
@@ -15286,6 +15378,28 @@ export interface components {
             observacion?: string | null;
         };
         /**
+         * RegistrarVacacionesDeAutoridadRequest
+         * @description Las vacaciones que el Consejo Provincial concede a una autoridad electa
+         *     (COOTAD Art. 47 s; TH 2026-11-26; fase 4.1d).
+         *
+         *     No se pregunta el motivo, ni el jefe que autoriza, ni con o sin
+         *     remuneración: son vacaciones anuales, las concede el Consejo y las vacaciones
+         *     son siempre con sueldo. Los dos topes —los 60 días del Consejo y los días que
+         *     tiene acumulados— los valida `AutoridadElectaService`.
+         */
+        RegistrarVacacionesDeAutoridadRequest: {
+            servidor_id: number;
+            /** Format: date-time */
+            fecha_inicio: string;
+            /**
+             * Format: date-time
+             * @description `after_or_equal` y no `after`: el Consejo puede conceder un día.
+             */
+            fecha_fin: string;
+            resolucion_numero: string;
+            observacion?: string | null;
+        };
+        /**
          * ReglasPrestamoRequest
          * @description Las reglas del préstamo que configura TIC (D16).
          */
@@ -15633,6 +15747,15 @@ export interface components {
             puede_marcar: boolean;
             /** @description Permisos y vacaciones ofrecen como firmante solo a los jefes. */
             es_jefe: boolean;
+            /**
+             * @description Vacaciones no se la ofrece a una autoridad electa: las suyas las
+             *     concede el Consejo (fase 4.1d). Va fuera del bloque de Talento
+             *     Humano —que es el que trae el nombramiento— porque el técnico de
+             *     Asistencia registra a nombre de otro sin ver expedientes, y sin
+             *     esto el selector se la seguiría ofreciendo. Quién es el Prefecto
+             *     no es dato reservado.
+             */
+            es_autoridad_electa: boolean;
             unidad_administrativa?: {
                 id: number;
                 nombre: string;
@@ -17065,6 +17188,12 @@ export interface components {
             dias_solicitados: number;
             /** @enum {string} */
             tipo_dias: "habiles" | "calendario";
+            /**
+             * @description 300 y no 500: es lo que entra en la caja de alto fijo de la
+             *     solicitud impresa —unos 100 caracteres por renglón, tres
+             *     renglones, 14 mm— sin que la hoja cambie de forma. Si se mueve
+             *     este tope hay que mover el alto en `vacacion-pdf.blade.php`.
+             */
             observacion?: string | null;
             /**
              * @description Sin `unidad_administrativa_id`: la solicitud lleva siempre la
@@ -18274,12 +18403,6 @@ export interface components {
             usuario_ti?: string;
             roles?: string[];
         };
-        /** UpdateVacacionRequest */
-        UpdateVacacionRequest: {
-            /** @enum {string} */
-            estado: "aprobada" | "rechazada";
-            observacion?: string | null;
-        };
         /** UsuarioAutenticadoResource */
         UsuarioAutenticadoResource: {
             id: number;
@@ -18385,6 +18508,7 @@ export interface components {
             anulado_en: string | null;
             motivo_anulacion: string | null;
             observacion: string | null;
+            resolucion_numero: string | null;
         };
         /**
          * VarianteIdentidad
@@ -18433,6 +18557,8 @@ export interface components {
             coeficiente_exterior: string | null;
             motivo_rechazo: string | null;
             partida_presupuestaria_id: number | null;
+            /** Format: date-time */
+            fecha_anticipo: string | null;
         };
         /**
          * VigenciaComunicado
@@ -20147,11 +20273,10 @@ export interface operations {
         responses: {
             200: {
                 headers: {
-                    "Transfer-Encoding": "chunked";
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/csv; charset=UTF-8": string;
+                    "application/json": unknown;
                 };
             };
             401: components["responses"]["AuthenticationException"];
@@ -20325,6 +20450,11 @@ export interface operations {
                                 nombre: string;
                                 cedula: string;
                             };
+                            /**
+                             * @description El puesto, no solo su nombre: la reelección abre el
+                             *     formulario con la misma dignidad ya elegida (fase 4.1).
+                             */
+                            puesto_id: number;
                             dignidad: string;
                             unidad: string;
                             desde: string;
@@ -20386,6 +20516,19 @@ export interface operations {
                                 hasta: string;
                                 estado: string;
                             } | null;
+                            /**
+                             * @description La dignidad que va a asumir, cuando el Prefecto se fue
+                             *     para siempre y esta asunción todavía no rige (4.1b).
+                             */
+                            asuncion: {
+                                ""?: {
+                                    id: number;
+                                    estado: string;
+                                    codigo_registro: string | null;
+                                    fecha_efectiva: string;
+                                } | null;
+                                dignidad: string;
+                            } | null;
                             es_prefecto: boolean;
                         }[];
                         meta: null;
@@ -20438,6 +20581,40 @@ export interface operations {
                                 hasta: string;
                             } | null;
                             aviso: string;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "autoridadElecta.dignidades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Dignidades de elección popular.";
+                        datos: {
+                            puesto_id: number;
+                            unidad_administrativa_id: number;
+                            dignidad: string;
+                            unidad: string;
+                            rmu: string;
+                            ocupada_por: string | null;
+                            ocupada_hasta: string;
                         }[];
                         meta: null;
                     };
@@ -20516,6 +20693,41 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "autoridadElecta.vacaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrarVacacionesDeAutoridadRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            vacacion_id: number;
+                            folio: string | null;
+                            dias: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -24999,11 +25211,10 @@ export interface operations {
         responses: {
             200: {
                 headers: {
-                    "Transfer-Encoding": "chunked";
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/csv; charset=UTF-8": string;
+                    "application/json": unknown;
                 };
             };
             401: components["responses"]["AuthenticationException"];
@@ -33089,6 +33300,30 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "viaticos.orden-anticipo.generar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identificador: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "inspecciones.index": {
@@ -47734,6 +47969,7 @@ export interface operations {
         parameters: {
             query?: {
                 equipo?: boolean;
+                estado?: "autorizada" | "registrada" | "gozada" | "anulada";
                 per_page?: number;
             };
             header?: never;
@@ -47938,7 +48174,7 @@ export interface operations {
             404: components["responses"]["ModelNotFoundException"];
         };
     };
-    "vacacion.update": {
+    "asistencia.vacaciones.registrar": {
         parameters: {
             query?: never;
             header?: never;
@@ -47947,12 +48183,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateVacacionRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
+            /**
+             * @description El impreso llega con esas dos casillas en blanco: se llenan a mano
+             *     aquí, en la ventanilla. Viajan en `meta` para que quien atiende no
+             *     tenga que ir a buscarlas a otra pantalla con el papel en la mano.
+             */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -47960,15 +48197,20 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        mensaje: string;
+                        /** @constant */
+                        mensaje: "Solicitud registrada por Talento Humano.";
                         datos: components["schemas"]["Vacacion"];
-                        meta: null;
+                        meta: {
+                            anotar: {
+                                se_descuenta_de: string;
+                                saldo_restante: number;
+                            };
+                        };
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "asistencia.vacaciones.anular": {
@@ -48351,6 +48593,8 @@ export interface operations {
                 "application/json": {
                     numero_resolucion: string;
                     partida_presupuestaria_id: number;
+                    /** Format: date-time */
+                    fecha_anticipo: string;
                 };
             };
         };

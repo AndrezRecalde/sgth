@@ -88,6 +88,13 @@ export type SubrogacionPorLeyData = {
   observacion?: string | null
 }
 
+export type VacacionesDeAutoridadData = {
+  fecha_inicio: string
+  fecha_fin: string
+  resolucion_numero: string
+  observacion?: string | null
+}
+
 export const autoridadElectaService = {
   listar: () =>
     api.get<ApiResponse<AutoridadElecta[]>>('/expediente/autoridades-electas').then((r) => r.data.datos),
@@ -108,6 +115,21 @@ export const autoridadElectaService = {
       .post<ApiResponse<{ subrogacion_id: number; movimiento_id: number | null }>>(
         '/expediente/autoridades-electas/subrogacion-por-ley',
         data,
+      )
+      .then((r) => r.data.datos),
+
+  /**
+   * Las vacaciones que le concede el Consejo (COOTAD Art. 47 s; fase 4.1d).
+   *
+   * No quedan en borrador como los actos de autoridad: la resolución es la
+   * autorización y el papel firmado a la vez, así que los días salen del saldo
+   * en el momento.
+   */
+  registrarVacaciones: (servidorId: number, data: VacacionesDeAutoridadData) =>
+    api
+      .post<ApiResponse<{ vacacion_id: number; folio: string | null; dias: number }>>(
+        '/expediente/autoridades-electas/vacaciones',
+        { servidor_id: servidorId, ...data },
       )
       .then((r) => r.data.datos),
 

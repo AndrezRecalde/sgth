@@ -3424,6 +3424,7 @@
         "/v1/sso/ausentismo/exportar-excel": {
             "get": {
                 "operationId": "sso.ausentismo.excel",
+                "summary": "El consolidado en Excel. Era un CSV sin t\u00edtulo ni per\u00edodo y con la\nc\u00e9dula expuesta a perder el cero; ver `ConsolidadoPermisosExport`",
                 "tags": [
                     "AusentismoSso"
                 ],
@@ -3431,21 +3432,8 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "text/csv; charset=UTF-8": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "headers": {
-                            "Transfer-Encoding": {
-                                "required": true,
-                                "schema": {
-                                    "type": "string",
-                                    "enum": [
-                                        "chunked"
-                                    ]
-                                }
+                            "application/json": {
+                                "schema": {}
                             }
                         }
                     },
@@ -3458,6 +3446,7 @@
         "/v1/sso/ausentismo/exportar-pdf": {
             "get": {
                 "operationId": "sso.ausentismo.pdf",
+                "summary": "El consolidado en PDF, en el estilo de los documentos institucionales\n(2026-11-24): A4 apaisado como los dem\u00e1s listados, membrete y pie fijos\nen cada hoja y los t\u00edtulos de columna repetidos si pasa a otra",
                 "tags": [
                     "AusentismoSso"
                 ],
@@ -3735,6 +3724,10 @@
                                                             "cedula"
                                                         ]
                                                     },
+                                                    "puesto_id": {
+                                                        "type": "integer",
+                                                        "description": "El puesto, no solo su nombre: la reelecci\u00f3n abre el\nformulario con la misma dignidad ya elegida (fase 4.1)."
+                                                    },
                                                     "dignidad": {
                                                         "type": "string"
                                                     },
@@ -3995,6 +3988,51 @@
                                                             "estado"
                                                         ]
                                                     },
+                                                    "asuncion": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "description": "La dignidad que va a asumir, cuando el Prefecto se fue\npara siempre y esta asunci\u00f3n todav\u00eda no rige (4.1b).",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "estado": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "codigo_registro": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "fecha_efectiva": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "estado",
+                                                                    "codigo_registro",
+                                                                    "fecha_efectiva"
+                                                                ]
+                                                            },
+                                                            "dignidad": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "dignidad"
+                                                        ]
+                                                    },
                                                     "es_prefecto": {
                                                         "type": "boolean"
                                                     }
@@ -4002,6 +4040,7 @@
                                                 "required": [
                                                     "contrato_id",
                                                     "servidor",
+                                                    "puesto_id",
                                                     "dignidad",
                                                     "unidad",
                                                     "desde",
@@ -4016,6 +4055,7 @@
                                                     "sucesor",
                                                     "ausencia",
                                                     "subrogacion",
+                                                    "asuncion",
                                                     "es_prefecto"
                                                 ]
                                             }
@@ -4210,6 +4250,89 @@
                 }
             }
         },
+        "/v1/expediente/autoridades-electas/dignidades": {
+            "get": {
+                "operationId": "autoridadElecta.dignidades",
+                "summary": "Las dignidades que existen y qui\u00e9n las ocupa, para el formulario (4.1)",
+                "tags": [
+                    "AutoridadElecta"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Dignidades de elecci\u00f3n popular."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "puesto_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "unidad_administrativa_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "dignidad": {
+                                                        "type": "string"
+                                                    },
+                                                    "unidad": {
+                                                        "type": "string"
+                                                    },
+                                                    "rmu": {
+                                                        "type": "string"
+                                                    },
+                                                    "ocupada_por": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "ocupada_hasta": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "puesto_id",
+                                                    "unidad_administrativa_id",
+                                                    "dignidad",
+                                                    "unidad",
+                                                    "rmu",
+                                                    "ocupada_por",
+                                                    "ocupada_hasta"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/contratos/{contrato}/fin-del-periodo": {
             "post": {
                 "operationId": "autoridadElecta.fijarFinDelPeriodo",
@@ -4360,6 +4483,85 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/autoridades-electas/vacaciones": {
+            "post": {
+                "operationId": "autoridadElecta.vacaciones",
+                "summary": "Registra las vacaciones que el Consejo le concede a una autoridad electa\n(COOTAD Art. 47 s; fase 4.1d). La resoluci\u00f3n es la autorizaci\u00f3n y el\npapel firmado a la vez, as\u00ed que los d\u00edas salen del saldo de una vez",
+                "tags": [
+                    "AutoridadElecta"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegistrarVacacionesDeAutoridadRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "vacacion_id": {
+                                                    "type": "integer"
+                                                },
+                                                "folio": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "dias": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "vacacion_id",
+                                                "folio",
+                                                "dias"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -14619,6 +14821,7 @@
         "/v1/asistencia/consolidado-permisos/exportar-excel": {
             "get": {
                 "operationId": "asistencia.consolidado.excel",
+                "summary": "El consolidado en Excel. Era un CSV sin t\u00edtulo ni per\u00edodo y con la\nc\u00e9dula expuesta a perder el cero; ver `ConsolidadoPermisosExport`",
                 "tags": [
                     "ConsolidadoPermiso"
                 ],
@@ -14626,21 +14829,8 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "text/csv; charset=UTF-8": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "headers": {
-                            "Transfer-Encoding": {
-                                "required": true,
-                                "schema": {
-                                    "type": "string",
-                                    "enum": [
-                                        "chunked"
-                                    ]
-                                }
+                            "application/json": {
+                                "schema": {}
                             }
                         }
                     },
@@ -14653,6 +14843,7 @@
         "/v1/asistencia/consolidado-permisos/exportar-pdf": {
             "get": {
                 "operationId": "asistencia.consolidado.pdf",
+                "summary": "El consolidado en PDF, en el estilo de los documentos institucionales\n(2026-11-24): A4 apaisado como los dem\u00e1s listados, membrete y pie fijos\nen cada hoja y los t\u00edtulos de columna repetidos si pasa a otra",
                 "tags": [
                     "ConsolidadoPermiso"
                 ],
@@ -34010,6 +34201,51 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/{identificador}/orden-anticipo/generar": {
+            "get": {
+                "operationId": "viaticos.orden-anticipo.generar",
+                "description": "A diferencia de los otros tres, este documento no lo abre cualquiera que\nvea el vi\u00e1tico: lo firma quien lo genera, as\u00ed que solo lo emite quien\nopera los vi\u00e1ticos. Si lo abriera el propio viajero, quedar\u00eda sellado\ncomo el funcionario que prepar\u00f3 su pago.",
+                "summary": "La orden de pago del anticipo",
+                "tags": [
+                    "InformeViatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "identificador",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -69278,6 +69514,19 @@
                         }
                     },
                     {
+                        "name": "estado",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "autorizada",
+                                "registrada",
+                                "gozada",
+                                "anulada"
+                            ]
+                        }
+                    },
+                    {
                         "name": "per_page",
                         "in": "query",
                         "schema": {
@@ -69764,9 +70013,11 @@
                 }
             }
         },
-        "/v1/asistencia/vacaciones/{id}": {
-            "put": {
-                "operationId": "vacacion.update",
+        "/v1/asistencia/vacaciones/{id}/registrar": {
+            "post": {
+                "operationId": "asistencia.vacaciones.registrar",
+                "description": "Sin cuerpo: ya no se manda un estado a elegir. El \u00fanico camino hacia\nadelante es registrarla, y el \u00fanico hacia atr\u00e1s, anularla con motivo.",
+                "summary": "Talento Humano registra la solicitud que recibe firmada en ventanilla",
                 "tags": [
                     "Vacacion"
                 ],
@@ -69780,19 +70031,9 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateVacacionRequest"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "El impreso llega con esas dos casillas en blanco: se llenan a mano\naqu\u00ed, en la ventanilla. Viajan en `meta` para que quien atiende no\ntenga que ir a buscarlas a otra pantalla con el papel en la mano.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -69802,13 +70043,34 @@
                                             "type": "boolean"
                                         },
                                         "mensaje": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "const": "Solicitud registrada por Talento Humano."
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/Vacacion"
                                         },
                                         "meta": {
-                                            "type": "null"
+                                            "type": "object",
+                                            "properties": {
+                                                "anotar": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "se_descuenta_de": {
+                                                            "type": "string"
+                                                        },
+                                                        "saldo_restante": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "se_descuenta_de",
+                                                        "saldo_restante"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "anotar"
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -69826,9 +70088,6 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -69837,7 +70096,7 @@
             "post": {
                 "operationId": "asistencia.vacaciones.anular",
                 "description": "El mensaje dice cu\u00e1ntos d\u00edas volvieron al saldo: es lo que quien anula\nnecesita comprobar, y no se ve en la fila de la solicitud.",
-                "summary": "Anula una pendiente, o una aprobada que a\u00fan no comienza",
+                "summary": "Anula una autorizada, o una registrada que a\u00fan no comienza",
                 "tags": [
                     "Vacacion"
                 ],
@@ -70739,11 +70998,16 @@
                                     },
                                     "partida_presupuestaria_id": {
                                         "type": "integer"
+                                    },
+                                    "fecha_anticipo": {
+                                        "type": "string",
+                                        "format": "date-time"
                                     }
                                 },
                                 "required": [
                                     "numero_resolucion",
-                                    "partida_presupuestaria_id"
+                                    "partida_presupuestaria_id",
+                                    "fecha_anticipo"
                                 ]
                             }
                         }
@@ -73182,7 +73446,13 @@
                                     "nombre": {
                                         "type": "string"
                                     },
+                                    "segundo_nombre": {
+                                        "type": "string"
+                                    },
                                     "apellido": {
+                                        "type": "string"
+                                    },
+                                    "segundo_apellido": {
                                         "type": "string"
                                     },
                                     "puesto": {
@@ -73210,7 +73480,9 @@
                                 },
                                 "required": [
                                     "nombre",
+                                    "segundo_nombre",
                                     "apellido",
+                                    "segundo_apellido",
                                     "puesto"
                                 ]
                             }
@@ -75433,6 +75705,10 @@
                         "$ref": "#/components/schemas/FamiliaAccionPersonal"
                     },
                     "se_crea_desde_formulario": {
+                        "type": "boolean",
+                        "description": "Responde si el formulario general la ofrece y la corrige, que\ndesde el 2026-11-26 no es lo mismo que si el endpoint la acepta:\nlos actos de una autoridad se crean por la misma ruta desde su\npesta\u00f1a (`seCreaDesdeElFormulario()`), pero este formulario ya\nno los ense\u00f1a."
+                    },
+                    "es_de_autoridad_electa": {
                         "type": "boolean"
                     },
                     "requiere_vinculo": {
@@ -75610,6 +75886,7 @@
                     "etiqueta",
                     "familia",
                     "se_crea_desde_formulario",
+                    "es_de_autoridad_electa",
                     "requiere_vinculo",
                     "nombramientos_elegibles",
                     "causales",
@@ -87845,6 +88122,42 @@
                 ],
                 "title": "RegistrarSubrogacionRequest"
             },
+            "RegistrarVacacionesDeAutoridadRequest": {
+                "type": "object",
+                "description": "Las vacaciones que el Consejo Provincial concede a una autoridad electa\n(COOTAD Art. 47 s; TH 2026-11-26; fase 4.1d).\n\nNo se pregunta el motivo, ni el jefe que autoriza, ni con o sin\nremuneraci\u00f3n: son vacaciones anuales, las concede el Consejo y las vacaciones\nson siempre con sueldo. Los dos topes \u2014los 60 d\u00edas del Consejo y los d\u00edas que\ntiene acumulados\u2014 los valida `AutoridadElectaService`.",
+                "properties": {
+                    "servidor_id": {
+                        "type": "integer"
+                    },
+                    "fecha_inicio": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fecha_fin": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "`after_or_equal` y no `after`: el Consejo puede conceder un d\u00eda."
+                    },
+                    "resolucion_numero": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "servidor_id",
+                    "fecha_inicio",
+                    "fecha_fin",
+                    "resolucion_numero"
+                ],
+                "title": "RegistrarVacacionesDeAutoridadRequest"
+            },
             "ReglasPrestamoRequest": {
                 "type": "object",
                 "description": "Las reglas del pr\u00e9stamo que configura TIC (D16).",
@@ -89138,6 +89451,10 @@
                         "type": "boolean",
                         "description": "Permisos y vacaciones ofrecen como firmante solo a los jefes."
                     },
+                    "es_autoridad_electa": {
+                        "type": "boolean",
+                        "description": "Vacaciones no se la ofrece a una autoridad electa: las suyas las\nconcede el Consejo (fase 4.1d). Va fuera del bloque de Talento\nHumano \u2014que es el que trae el nombramiento\u2014 porque el t\u00e9cnico de\nAsistencia registra a nombre de otro sin ver expedientes, y sin\nesto el selector se la seguir\u00eda ofreciendo. Qui\u00e9n es el Prefecto\nno es dato reservado."
+                    },
                     "unidad_administrativa": {
                         "type": [
                             "object",
@@ -89212,7 +89529,8 @@
                     "regimen_laboral",
                     "estado",
                     "puede_marcar",
-                    "es_jefe"
+                    "es_jefe",
+                    "es_autoridad_electa"
                 ],
                 "title": "ServidorBusquedaResource"
             },
@@ -94136,7 +94454,8 @@
                             "string",
                             "null"
                         ],
-                        "maxLength": 500
+                        "description": "300 y no 500: es lo que entra en la caja de alto fijo de la\nsolicitud impresa \u2014unos 100 caracteres por rengl\u00f3n, tres\nrenglones, 14 mm\u2014 sin que la hoja cambie de forma. Si se mueve\neste tope hay que mover el alto en `vacacion-pdf.blade.php`.",
+                        "maxLength": 300
                     },
                     "persona_reemplaza_id": {
                         "type": [
@@ -98495,29 +98814,6 @@
                 },
                 "title": "UpdateUsuarioRequest"
             },
-            "UpdateVacacionRequest": {
-                "type": "object",
-                "properties": {
-                    "estado": {
-                        "type": "string",
-                        "enum": [
-                            "aprobada",
-                            "rechazada"
-                        ]
-                    },
-                    "observacion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 500
-                    }
-                },
-                "required": [
-                    "estado"
-                ],
-                "title": "UpdateVacacionRequest"
-            },
             "UsuarioAutenticadoResource": {
                 "type": "object",
                 "properties": {
@@ -98917,6 +99213,12 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "resolucion_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -98943,7 +99245,8 @@
                     "anulado_por",
                     "anulado_en",
                     "motivo_anulacion",
-                    "observacion"
+                    "observacion",
+                    "resolucion_numero"
                 ],
                 "title": "Vacacion"
             },
@@ -99077,6 +99380,13 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "fecha_anticipo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -99103,7 +99413,8 @@
                     "noches",
                     "coeficiente_exterior",
                     "motivo_rechazo",
-                    "partida_presupuestaria_id"
+                    "partida_presupuestaria_id",
+                    "fecha_anticipo"
                 ],
                 "title": "Viatico"
             },

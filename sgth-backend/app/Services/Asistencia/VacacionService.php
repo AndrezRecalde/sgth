@@ -9,6 +9,7 @@ use App\Enums\EstadoVacacion;
 use App\Enums\MotivoVacacion;
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoAusenciaTitular;
+use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\Licencia;
 use App\Models\Asistencia\PermisoServidor;
@@ -102,6 +103,18 @@ class VacacionService implements VacacionServiceInterface
     }
 
     /**
+     * ¿Es una autoridad de elección popular en funciones?
+     *
+     * Se pregunta por el **nombramiento** y no por el régimen: una autoridad es
+     * de régimen `losep` y genera sus 30 días como cualquiera —el derecho no
+     * cambia—, lo que cambia es quién se los concede.
+     */
+    private function esAutoridadElecta(Servidor $servidor): bool
+    {
+        return $servidor->contratoVigente?->tipo_nombramiento === TipoNombramiento::ELECCION_POPULAR;
+    }
+
+    /**
      * Las reglas de negocio se lanzan como `ReglaNegocioException`. Antes eran
      * `\Exception` genéricas: el manejador las convertía en un 500 «Error
      * interno del servidor.» y el motivo —saldo insuficiente, fechas al revés—
@@ -124,6 +137,19 @@ class VacacionService implements VacacionServiceInterface
             if (! $this->generaVacaciones($servidor)) {
                 throw new ReglaNegocioException(
                     'El régimen de este servidor no genera vacaciones.'
+                );
+            }
+
+            // A una autoridad electa se las concede el Consejo Provincial por
+            // resolución (COOTAD Art. 47 s; TH 2026-11-26), así que esta vía
+            // —la del jefe inmediato— no es la suya. Si siguiera abierta, el
+            // Prefecto se saltaría al Consejo sin querer, que es justo lo que
+            // esto evita. `por_resolucion` lo pone AutoridadElectaService, que
+            // ya comprobó la resolución y el tope de los 60 días.
+            if (empty($datos['por_resolucion']) && $this->esAutoridadElecta($servidor)) {
+                throw new ReglaNegocioException(
+                    'Las vacaciones de una autoridad electa las concede el Consejo Provincial por resolución '
+                    .'(COOTAD Art. 47 s): regístrelas desde «Autoridades electas», con el número de la resolución.'
                 );
             }
 
@@ -212,6 +238,11 @@ class VacacionService implements VacacionServiceInterface
                 'dias_solicitados' => $diasADescontar,
                 'tipo_dias'        => $tipoDias,
                 'observacion'      => filled($datos['observacion'] ?? null) ? trim($datos['observacion']) : null,
+                // Solo en las de una autoridad electa: es su autorización, y es
+                // además lo que las hace contar contra los 60 del Consejo.
+                'resolucion_numero' => filled($datos['resolucion_numero'] ?? null)
+                    ? trim((string) $datos['resolucion_numero'])
+                    : null,
                 // Nace autorizada: el jefe inmediato ya dio el visto bueno de
                 // palabra y lo confirmará firmando el impreso. Los días no se
                 // descuentan hasta que Talento Humano la registre.
