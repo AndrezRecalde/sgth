@@ -1,5 +1,5 @@
 import { Text } from '@mantine/core'
-import { IconCalendarEvent, IconFileText } from '@tabler/icons-react'
+import { IconCalendarEvent, IconFileText, IconUserCheck } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
@@ -104,12 +104,15 @@ interface Opciones {
   onFijarFin: (a: AutoridadElecta) => void
   /** Abre el acto en su cajón, que es donde se suscribe y se registra. */
   onVerActo: (movimientoId: number) => void
+  /** El período siguiente de la autoridad reelegida (TH 4). */
+  onReelegir: (a: AutoridadElecta) => void
 }
 
 export const getAutoridadElectaColumns = ({
   puedePreparar,
   onFijarFin,
   onVerActo,
+  onReelegir,
 }: Opciones): DataTableColumn<AutoridadElecta>[] => [
   {
     accessor: 'servidor',
@@ -171,6 +174,14 @@ export const getAutoridadElectaColumns = ({
             icon: <IconFileText size={14} />,
             onClick: () => a.asuncion && onVerActo(a.asuncion.id),
             hidden: !a.asuncion,
+          },
+          {
+            // Se esconde si ya hay un período siguiente —es uno por autoridad,
+            // y el sistema rechaza el segundo— o si está cesando.
+            label: 'Registrar su reelección',
+            icon: <IconUserCheck size={14} />,
+            onClick: () => onReelegir(a),
+            hidden: Boolean(a.siguiente) || Boolean(a.cese) || !puedePreparar(a.servidor.id),
           },
         ]}
       />

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Alert, Button, Group, Stack, Text } from '@mantine/core'
-import { IconAlertTriangle, IconBuildingBank, IconInfoCircle, IconUserPlus, IconUserShare } from '@tabler/icons-react'
+import { IconAlertTriangle, IconBuildingBank, IconInfoCircle, IconUserCheck, IconUserPlus, IconUserShare } from '@tabler/icons-react'
 import { DataState, SectionHeading, SgthTable } from '@/components/ui'
 import { useAutoridadesElectas, useAutoridadesEntrantes } from '../hooks/useAutoridadesElectas'
 import { usePuedePrepararAcciones } from '../hooks/usePuedePrepararAccion'
@@ -11,6 +11,7 @@ import { getAutoridadElectaColumns } from './autoridadesElectas.columns'
 import { getAutoridadEntranteColumns } from './autoridadesEntrantes.columns'
 import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
 import { FinDelPeriodoModal } from './FinDelPeriodoModal'
+import { InicioDelPeriodoModal } from './InicioDelPeriodoModal'
 import { SubrogacionPorLeyModal } from './SubrogacionPorLeyModal'
 
 /**
@@ -32,8 +33,12 @@ export function AutoridadesElectasPanel() {
   const [aFijar, setAFijar] = React.useState<AutoridadElecta | null>(null)
   const [subrogar, setSubrogar] = React.useState(false)
   const [actoVisto, setActoVisto] = React.useState<number | null>(null)
+  const [iniciar, setIniciar] = React.useState(false)
+  const [reelegir, setReelegir] = React.useState<AutoridadElecta | null>(null)
 
-  const columns = getAutoridadElectaColumns({ puedePreparar, onFijarFin: setAFijar, onVerActo: setActoVisto })
+  const columns = getAutoridadElectaColumns({
+    puedePreparar, onFijarFin: setAFijar, onVerActo: setActoVisto, onReelegir: setReelegir,
+  })
   const columnasEntrantes = getAutoridadEntranteColumns()
   const relevosSinCuadrar = entrantes.filter((e) => e.aviso)
   // Con Prefecto y sin nadie más en funciones, la Viceprefectura está vacante:
@@ -54,11 +59,12 @@ export function AutoridadesElectasPanel() {
     <Stack gap="md">
       <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
         A las autoridades electas no se les emite acción de personal: su período
-        empieza con la credencial del CNE y se cierra solo en su fecha. Si fue
-        reelegida, registre el inicio del período nuevo desde «Nueva acción de
-        personal»: empieza cuando termina el actual, sin cortar su antigüedad. La
-        licencia del Prefecto de más de tres días prepara sola la subrogación por
-        ley del Viceprefecto (COOTAD Art. 51).
+        empieza con la credencial del CNE —o con la resolución del Consejo, si
+        designa al Viceprefecto— y se cierra solo en su fecha. Se registran desde
+        aquí el inicio del período, el de la reelegida, que empieza cuando termina
+        el actual sin cortar su antigüedad, y la subrogación por ley del
+        Viceprefecto, que la licencia del Prefecto de más de tres días prepara
+        sola (COOTAD Art. 51).
       </Alert>
 
       {relevosSinCuadrar.map((e) => (
@@ -104,6 +110,9 @@ export function AutoridadesElectasPanel() {
 
       {puedePreparar(null) && (
         <Group justify="flex-end">
+          <Button variant="light" leftSection={<IconUserCheck size={16} />} onClick={() => setIniciar(true)}>
+            Registrar inicio del período
+          </Button>
           <Button variant="light" leftSection={<IconUserShare size={16} />} onClick={() => setSubrogar(true)}>
             Registrar subrogación por ley
           </Button>
@@ -146,6 +155,19 @@ export function AutoridadesElectasPanel() {
         opened={actoVisto !== null}
         movimientoId={actoVisto}
         onClose={() => setActoVisto(null)}
+      />
+
+      <InicioDelPeriodoModal opened={iniciar} onClose={() => setIniciar(false)} />
+
+      <InicioDelPeriodoModal
+        opened={!!reelegir}
+        onClose={() => setReelegir(null)}
+        reeleccion={reelegir?.servidor.id ? {
+          servidorId: reelegir.servidor.id,
+          nombre: reelegir.servidor.nombre,
+          puestoId: reelegir.puesto_id,
+          hasta: reelegir.hasta,
+        } : null}
       />
 
       <FinDelPeriodoModal opened={!!aFijar} onClose={() => setAFijar(null)} autoridad={aFijar} />

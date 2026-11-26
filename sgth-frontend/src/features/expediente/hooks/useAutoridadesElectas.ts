@@ -22,6 +22,19 @@ export function useAutoridadesEntrantes() {
   })
 }
 
+/**
+ * Las dignidades que hay y quién las ocupa. Son dos y no cambian nunca, así
+ * que la caché aguanta de sobra los cinco minutos.
+ */
+export function useDignidades(habilitado = true) {
+  return useQuery({
+    queryKey: ['autoridades-electas', 'dignidades'],
+    queryFn: autoridadElectaService.dignidades,
+    staleTime: 1000 * 60 * 5,
+    enabled: habilitado,
+  })
+}
+
 /** La subrogación por ley del Viceprefecto (fase 4.1b). */
 export function useRegistrarSubrogacionPorLey() {
   const qc = useQueryClient()

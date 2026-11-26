@@ -47,7 +47,7 @@ beforeEach(function () {
         'unidad_administrativa_id' => $this->prefectura->id, 'plazas' => 1, 'es_jefe' => true,
         'grupo_ocupacional_id'     => GrupoOcupacional::create([
             'grado_codigo' => 'NJS-10', 'grado_numerico' => 10, 'grupo' => 'NJS', 'denominacion_generica' => 'Prefecto/a',
-            'rmu' => 5060, 'regimen' => 'losep', 'activo' => true,
+            'rmu' => 5060, 'regimen' => 'losep', 'activo' => true, 'rol_puesto' => 'dignatario',
         ])->id,
     ]);
 
@@ -156,6 +156,30 @@ test('al ingreso no se le registra la elección popular', function () {
         'puesto_destino_id'           => $this->prefecto->id,
     ])->assertStatus(422)
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'Inicio del período'));
+});
+
+test('el formulario solo puede elegir entre las dignidades, y dice quién las ocupa', function () {
+    [$prefecta] = ($this->enFunciones)('2023-05-15', '2027-05-14');
+
+    // Un puesto cualquiera, para comprobar que no se cuela en la lista: el
+    // formulario del inicio del período no ofrece ningún otro (fase 4.1).
+    $otra = UnidadAdministrativa::create(['codigo' => 'ADM0', 'nombre' => 'Gestión Administrativa', 'nivel' => 2]);
+    Puesto::create([
+        'unidad_administrativa_id' => $otra->id, 'plazas' => 3,
+        'grupo_ocupacional_id'     => GrupoOcupacional::create([
+            'grado_codigo' => 'SPA-0', 'grado_numerico' => 1, 'grupo' => 'SP', 'denominacion_generica' => 'Asistente',
+            'rmu' => 585, 'regimen' => 'losep', 'activo' => true, 'rol_puesto' => 'administrativo',
+        ])->id,
+    ]);
+
+    $dignidades = $this->getJson('/api/v1/expediente/autoridades-electas/dignidades')->assertOk()->json('datos');
+
+    expect($dignidades)->toHaveCount(1)
+        ->and($dignidades[0]['puesto_id'])->toBe($this->prefecto->id)
+        // Quién la ocupa y hasta cuándo: el período que entra no empieza antes,
+        // y el formulario lo dice antes de dejar enviar.
+        ->and($dignidades[0]['ocupada_por'])->toContain($prefecta->apellido)
+        ->and($dignidades[0]['ocupada_hasta'])->toBe('2027-05-14');
 });
 
 test('no ocupa plaza: el entrante y el saliente coinciden el día del cambio', function () {
