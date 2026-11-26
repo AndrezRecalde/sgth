@@ -10,7 +10,9 @@ import type { AutoridadElecta } from '../services/autoridadElectaService'
 import { getAutoridadElectaColumns } from './autoridadesElectas.columns'
 import { getAutoridadEntranteColumns } from './autoridadesEntrantes.columns'
 import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
+import { CesacionDeAutoridadModal } from './CesacionDeAutoridadModal'
 import { FinDelPeriodoModal } from './FinDelPeriodoModal'
+import { LicenciaDelConsejoModal } from './LicenciaDelConsejoModal'
 import { InicioDelPeriodoModal } from './InicioDelPeriodoModal'
 import { SubrogacionPorLeyModal } from './SubrogacionPorLeyModal'
 
@@ -35,9 +37,16 @@ export function AutoridadesElectasPanel() {
   const [actoVisto, setActoVisto] = React.useState<number | null>(null)
   const [iniciar, setIniciar] = React.useState(false)
   const [reelegir, setReelegir] = React.useState<AutoridadElecta | null>(null)
+  const [conLicencia, setConLicencia] = React.useState<AutoridadElecta | null>(null)
+  const [aCesar, setACesar] = React.useState<AutoridadElecta | null>(null)
 
   const columns = getAutoridadElectaColumns({
-    puedePreparar, onFijarFin: setAFijar, onVerActo: setActoVisto, onReelegir: setReelegir,
+    puedePreparar,
+    onFijarFin: setAFijar,
+    onVerActo: setActoVisto,
+    onReelegir: setReelegir,
+    onLicencia: setConLicencia,
+    onCesar: setACesar,
   })
   const columnasEntrantes = getAutoridadEntranteColumns()
   const relevosSinCuadrar = entrantes.filter((e) => e.aviso)
@@ -168,6 +177,18 @@ export function AutoridadesElectasPanel() {
           puestoId: reelegir.puesto_id,
           hasta: reelegir.hasta,
         } : null}
+      />
+
+      <LicenciaDelConsejoModal
+        opened={!!conLicencia}
+        onClose={() => setConLicencia(null)}
+        autoridad={conLicencia}
+      />
+
+      <CesacionDeAutoridadModal
+        opened={!!aCesar}
+        onClose={() => setACesar(null)}
+        autoridad={aCesar}
       />
 
       <FinDelPeriodoModal opened={!!aFijar} onClose={() => setAFijar(null)} autoridad={aFijar} />

@@ -1,5 +1,5 @@
 import { Text } from '@mantine/core'
-import { IconCalendarEvent, IconFileText, IconUserCheck } from '@tabler/icons-react'
+import { IconBeach, IconCalendarEvent, IconFileText, IconUserCheck, IconUserOff } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
@@ -106,6 +106,10 @@ interface Opciones {
   onVerActo: (movimientoId: number) => void
   /** El período siguiente de la autoridad reelegida (TH 4). */
   onReelegir: (a: AutoridadElecta) => void
+  /** La licencia que concede el Consejo (COOTAD Art. 47 s). */
+  onLicencia: (a: AutoridadElecta) => void
+  /** El cese: renuncia, fallecimiento, revocatoria o remoción. */
+  onCesar: (a: AutoridadElecta) => void
 }
 
 export const getAutoridadElectaColumns = ({
@@ -113,6 +117,8 @@ export const getAutoridadElectaColumns = ({
   onFijarFin,
   onVerActo,
   onReelegir,
+  onLicencia,
+  onCesar,
 }: Opciones): DataTableColumn<AutoridadElecta>[] => [
   {
     accessor: 'servidor',
@@ -182,6 +188,20 @@ export const getAutoridadElectaColumns = ({
             icon: <IconUserCheck size={14} />,
             onClick: () => onReelegir(a),
             hidden: Boolean(a.siguiente) || Boolean(a.cese) || !puedePreparar(a.servidor.id),
+          },
+          {
+            label: 'Registrar licencia del Consejo',
+            icon: <IconBeach size={14} />,
+            onClick: () => onLicencia(a),
+            // Con una licencia en curso, la siguiente se registra cuando esa
+            // termina: el tope de los 60 días las suma todas igualmente.
+            hidden: Boolean(a.ausencia) || Boolean(a.cese) || !puedePreparar(a.servidor.id),
+          },
+          {
+            label: 'Registrar cesación',
+            icon: <IconUserOff size={14} />,
+            onClick: () => onCesar(a),
+            hidden: Boolean(a.cese) || !puedePreparar(a.servidor.id),
           },
         ]}
       />
