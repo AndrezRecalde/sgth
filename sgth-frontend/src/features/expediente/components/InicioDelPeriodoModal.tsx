@@ -3,17 +3,14 @@
 import { Alert, Grid, NumberInput, Select, Stack, Text, Textarea, TextInput } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconInfoCircle } from '@tabler/icons-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal, notificar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { formatFecha, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
-import { getApiErrorMessage } from '@/types/api'
-import { movimientoService } from '../services/movimientoService'
 import { useDignidades } from '../hooks/useAutoridadesElectas'
+import { useRegistrarActoDeAutoridad } from '../hooks/useRegistrarActoDeAutoridad'
 import {
   inicioDelPeriodoSchema, type InicioDelPeriodoFormData,
 } from '../schemas/inicioDelPeriodo.schema'
@@ -52,12 +49,11 @@ export function InicioDelPeriodoModal({ opened, onClose, reeleccion = null }: Pr
 
 function Formulario({ onClose, reeleccion }: Omit<Props, 'opened'>) {
   const contained = useContainedInput()
-  const qc = useQueryClient()
   const { data: dignidades = [], isLoading } = useDignidades()
 
   const {
-    control, register, handleSubmit, setValue, setError,
-    formState: { errors, isSubmitting },
+    control, register, handleSubmit, setValue, setError, getValues,
+    formState: { errors },
   } = useForm<InicioDelPeriodoFormData>({
     resolver: zodResolver(inicioDelPeriodoSchema),
     defaultValues: {
@@ -105,7 +101,21 @@ function Formulario({ onClose, reeleccion }: Omit<Props, 'opened'>) {
     setValue('remuneracion_propuesta', d?.rmu != null ? Number(d.rmu) : null)
   }
 
-  const guardar = async (v: InicioDelPeriodoFormData) => {
+  const { registrar, enviando } = useRegistrarActoDeAutoridad<InicioDelPeriodoFormData>({
+    servidorId: () => getValues('servidor_id'),
+    campos: [
+      'fecha_efectiva', 'fecha_fin_propuesta', 'credencial_cne_numero', 'credencial_cne_fecha',
+      'acto_origen_numero', 'acto_origen_fecha', 'puesto_destino_id', 'descripcion',
+    ],
+    tituloDelError: 'No se pudo registrar el inicio del período',
+    exito: {
+      titulo: 'Inicio del período registrado',
+      detalle: 'Quedó en borrador: suscríbalo y regístrelo en la bandeja de acciones.',
+    },
+    onListo: onClose,
+  })
+
+  const guardar = (v: InicioDelPeriodoFormData) => {
     const comun = {
       clase: 'inicio_periodo' as const,
       causal: v.causal,
@@ -139,37 +149,7 @@ function Formulario({ onClose, reeleccion }: Omit<Props, 'opened'>) {
           fecha_fin_propuesta: v.fecha_fin_propuesta,
         }
 
-    try {
-      await movimientoService.crearActoDeAutoridad(v.servidor_id, datos)
-      notificar.exito(
-        'Inicio del período registrado',
-        'Quedó en borrador: suscríbalo y regístrelo en la bandeja de acciones.',
-      )
-      for (const key of [['autoridades-electas'], ['movimientos'], ['bandeja-movimientos']]) {
-        qc.invalidateQueries({ queryKey: key })
-      }
-      onClose()
-    } catch (error) {
-      const campos = erroresDeCampo(error)
-      let alguno = false
-      for (const campo of [
-        'fecha_efectiva', 'fecha_fin_propuesta', 'credencial_cne_numero', 'credencial_cne_fecha',
-        'acto_origen_numero', 'acto_origen_fecha', 'puesto_destino_id', 'descripcion',
-      ] as const) {
-        if (campos?.[campo]) {
-          setError(campo, { type: 'server', message: campos[campo] })
-          alguno = true
-        }
-      }
-      // Las reglas de negocio —el período que no cabe, el saliente que no
-      // termina, la dignidad que no lo es— llegan como mensaje, no por campo.
-      if (!alguno) {
-        notificar.error(
-          'No se pudo registrar el inicio del período',
-          getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'),
-        )
-      }
-    }
+    return registrar(datos, setError)
   }
 
   /*
@@ -229,7 +209,7 @@ function Formulario({ onClose, reeleccion }: Omit<Props, 'opened'>) {
       size="lg"
       onSubmit={handleSubmit(guardar, alFallar)}
       submitLabel="Registrar en borrador"
-      submitting={isSubmitting}
+      submitting={enviando}
     >
       <Stack gap="md">
         <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>

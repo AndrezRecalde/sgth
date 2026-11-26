@@ -8,8 +8,13 @@ import type { ActualizarBorradorData, FiltrosBandeja, TransicionarData } from '.
 // Se reexportan para que quien los importaba de aquí no tenga que cambiar.
 export type { ActualizarBorradorData, FiltrosBandeja, TransicionarData }
 
-/** El cuerpo del inicio del período de una autoridad electa (fase 4.1). */
-export type ActoDeAutoridadData = {
+/*
+| Los actos de una autoridad electa (fase 4.1 y 4.1b). Cada uno manda lo suyo
+| y nada de los otros: el backend limpia igualmente, pero un número de
+| credencial viajando en una cesación no significa nada y confunde a quien
+| revisa el borrador.
+*/
+export type InicioDelPeriodoData = {
   clase: 'inicio_periodo'
   causal: 'eleccion' | 'designacion_del_consejo'
   descripcion: string
@@ -26,6 +31,31 @@ export type ActoDeAutoridadData = {
   /** Siempre 'resolucion': es lo que emite el Consejo (COOTAD Art. 47 n). */
   acto_origen_tipo?: 'resolucion'
 }
+
+export type LicenciaDelConsejoData = {
+  clase: 'licencia_consejo'
+  descripcion: string
+  /** Rige el día en que empieza: para una ausencia son el mismo día. */
+  fecha_efectiva: string
+  fecha_inicio: string
+  fecha_fin: string
+  con_remuneracion: boolean
+  prorroga_causa: 'enfermedad_catastrofica' | 'calamidad_domestica' | null
+  resolucion_numero: string
+}
+
+export type CesacionDeAutoridadData = {
+  clase: 'cesacion'
+  causal: 'renuncia' | 'fallecimiento' | 'revocatoria_del_mandato' | 'remocion_por_el_consejo'
+  descripcion: string
+  fecha_efectiva: string
+  resolucion_numero: string
+}
+
+export type ActoDeAutoridadData =
+  | InicioDelPeriodoData
+  | LicenciaDelConsejoData
+  | CesacionDeAutoridadData
 
 /** Espeja las constantes de `AvisoFinancieroSancionService`. */
 export type AvisoFinanciero = 'enviado' | 'sin_destinatario' | 'fallo_envio'
