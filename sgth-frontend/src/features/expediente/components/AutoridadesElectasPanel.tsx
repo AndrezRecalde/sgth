@@ -4,9 +4,9 @@ import React from 'react'
 import { Alert, Button, Group, Stack, Text } from '@mantine/core'
 import { IconAlertTriangle, IconBuildingBank, IconInfoCircle, IconUserCheck, IconUserPlus, IconUserShare } from '@tabler/icons-react'
 import { DataState, SectionHeading, SgthTable } from '@/components/ui'
-import { useAuth } from '@/hooks/useAuth'
 import { useAutoridadesElectas, useAutoridadesEntrantes } from '../hooks/useAutoridadesElectas'
 import { usePuedePrepararAcciones } from '../hooks/usePuedePrepararAccion'
+import { usePuedeRegistrarActoDeAutoridad } from '../hooks/usePuedeRegistrarActoDeAutoridad'
 import type { AutoridadElecta } from '../services/autoridadElectaService'
 import { getAutoridadElectaColumns } from './autoridadesElectas.columns'
 import { getAutoridadEntranteColumns } from './autoridadesEntrantes.columns'
@@ -34,7 +34,7 @@ export function AutoridadesElectasPanel() {
   const { data: autoridades = [], isLoading, error, refetch } = useAutoridadesElectas()
   const { data: entrantes = [], error: errorEntrantes } = useAutoridadesEntrantes()
   const puedePreparar = usePuedePrepararAcciones()
-  const { hasPermiso } = useAuth()
+  const puedeActoAutoridad = usePuedeRegistrarActoDeAutoridad()
   const [aFijar, setAFijar] = React.useState<AutoridadElecta | null>(null)
   const [subrogar, setSubrogar] = React.useState(false)
   const [actoVisto, setActoVisto] = React.useState<number | null>(null)
@@ -45,14 +45,17 @@ export function AutoridadesElectasPanel() {
   const [aCesar, setACesar] = React.useState<AutoridadElecta | null>(null)
 
   const columns = getAutoridadElectaColumns({
-    puedePreparar,
+    /*
+    | Desde D3 (2026-11-27) manda `registrar-acto-autoridad`, y no el permiso
+    | de las acciones de personal: los actos de una autoridad son otra cosa y
+    | se pueden quitar por separado. Lo de no tramitar lo propio sigue
+    | valiendo, así que se cruzan los dos.
+    */
+    puedePreparar: (servidorId) => puedeActoAutoridad && puedePreparar(servidorId),
     onFijarFin: setAFijar,
     onVerActo: setActoVisto,
     onReelegir: setReelegir,
     onLicencia: setConLicencia,
-    // Registrar vacaciones mueve el saldo: es de quien las aprueba, no solo
-    // de quien prepara acciones (fase 4.1d).
-    puedeRegistrarVacaciones: hasPermiso('aprobar-vacaciones'),
     onVacaciones: setConVacaciones,
     onCesar: setACesar,
   })

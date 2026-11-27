@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Expediente;
 
+use App\Enums\Permiso;
 use App\Enums\TipoActoDeOrigen;
 use App\Enums\TipoNombramiento;
+use App\Models\Expediente\MovimientoPersonal;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
@@ -16,9 +18,17 @@ use Illuminate\Validation\Rules\Enum;
  */
 class UpdateMovimientoPersonalRequest extends FormRequest
 {
+    /**
+     * Corregir el borrador de un acto de autoridad pide
+     * `registrar-acto-autoridad` (D3, 2026-11-27): aquí la clase no viene en
+     * el cuerpo —cambiarla no es editar—, así que se mira la del acto.
+     */
     public function authorize(): bool
     {
-        return true;
+        $movimiento = $this->route('movimiento');
+
+        return ! ($movimiento instanceof MovimientoPersonal && $movimiento->clase?->esDeAutoridadElecta())
+            || (bool) $this->user()?->can(Permiso::REGISTRAR_ACTO_AUTORIDAD->value);
     }
 
     public function rules(): array
