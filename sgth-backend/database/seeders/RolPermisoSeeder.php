@@ -319,6 +319,9 @@ class RolPermisoSeeder extends Seeder
             Permiso::REGISTRAR_ACCION_PERSONAL,
             Permiso::NOTIFICAR_ACCION_PERSONAL,
             Permiso::ANULAR_ACCION_PERSONAL,
+            // Y los actos del Prefecto y del Viceprefecto, que no son acciones
+            // de personal: van en su propio permiso (D3, 2026-11-27).
+            Permiso::REGISTRAR_ACTO_AUTORIDAD,
             // Corregir a mano la fecha de ingreso (fase 1.5).
             Permiso::CORREGIR_DATOS_LABORALES,
             // Las novedades del mes, y su entrega a Financiero (fase 7.3a).
@@ -382,6 +385,8 @@ class RolPermisoSeeder extends Seeder
             // director (TH 22).
             Permiso::PREPARAR_ACCION_PERSONAL,
             Permiso::NOTIFICAR_ACCION_PERSONAL,
+            // Los actos de autoridad también los registra el asistente (D3).
+            Permiso::REGISTRAR_ACTO_AUTORIDAD,
             // Las ve; entregarlas es del director (fase 7.3a).
             Permiso::VER_NOVEDADES_NOMINA,
             Permiso::VER_ASISTENCIA_UNIDAD,

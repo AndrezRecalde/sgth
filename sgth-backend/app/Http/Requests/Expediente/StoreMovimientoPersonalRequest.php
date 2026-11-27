@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Expediente;
 
 use App\Enums\ClaseAccionPersonal;
+use App\Enums\Permiso;
 use App\Enums\TipoActoDeOrigen;
 use App\Enums\TipoNombramiento;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,9 +12,21 @@ use Illuminate\Validation\Rules\Enum;
 
 class StoreMovimientoPersonalRequest extends FormRequest
 {
+    /**
+     * Un acto de una autoridad electa pide `registrar-acto-autoridad` además
+     * del permiso de la ruta (D3, 2026-11-27).
+     *
+     * La ruta no puede decirlo: el inicio del período, la licencia del Consejo
+     * y la cesación de una autoridad entran por el mismo endpoint que las
+     * acciones de personal de todos —la pestaña manda `clase` igual que el
+     * formulario—, así que quién puede depende de qué clase viene.
+     */
     public function authorize(): bool
     {
-        return true;
+        $clase = ClaseAccionPersonal::tryFrom((string) $this->input('clase'));
+
+        return ! $clase?->esDeAutoridadElecta()
+            || (bool) $this->user()?->can(Permiso::REGISTRAR_ACTO_AUTORIDAD->value);
     }
 
     /**

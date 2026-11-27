@@ -20,6 +20,7 @@ import { ReporteSiithPanel } from '@/features/expediente/components/ReporteSiith
 import { ContratoColectivoPanel } from '@/features/expediente/components/ContratoColectivoPanel'
 import { SolicitudesDelPortalPanel } from '@/features/expediente/components/SolicitudesDelPortalPanel'
 import { usePuedePrepararAccion } from '@/features/expediente/hooks/usePuedePrepararAccion'
+import { usePuedeRegistrarActoDeAutoridad } from '@/features/expediente/hooks/usePuedeRegistrarActoDeAutoridad'
 import type { FamiliaDelCatalogo, ServidorBusqueda } from '@/types/api'
 import { PageHeader, PageShell } from '@/components/ui'
 
@@ -29,6 +30,7 @@ export function AccionesPersonalView() {
   // La pestaña de registrar es de quien prepara acciones (diseño, 6.3). A
   // quien solo suscribe o registra le queda la bandeja.
   const puedePreparar = usePuedePrepararAccion()
+  const puedeActoAutoridad = usePuedeRegistrarActoDeAutoridad()
 
   /**
    * La familia elegida es lo que abre el formulario: no hace falta un
@@ -76,9 +78,14 @@ export function AccionesPersonalView() {
           <Tabs.Tab value="prueba" leftSection={<IconHourglass size={16} />}>
             Períodos de prueba
           </Tabs.Tab>
-          <Tabs.Tab value="autoridades" leftSection={<IconBuildingBank size={16} />}>
-            Autoridades electas
-          </Tabs.Tab>
+          {/* Toda la pestaña va con `registrar-acto-autoridad` (D3): quien no
+              lo tiene recibía un 403 del servidor y una pestaña con un error
+              donde no tenía nada que hacer. */}
+          {puedeActoAutoridad && (
+            <Tabs.Tab value="autoridades" leftSection={<IconBuildingBank size={16} />}>
+              Autoridades electas
+            </Tabs.Tab>
+          )}
           <Tabs.Tab value="terminaciones-obreros" leftSection={<IconUserMinus size={16} />}>
             Terminaciones de obreros
           </Tabs.Tab>

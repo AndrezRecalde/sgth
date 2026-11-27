@@ -108,12 +108,6 @@ interface Opciones {
   onReelegir: (a: AutoridadElecta) => void
   /** La licencia que concede el Consejo (COOTAD Art. 47 s). */
   onLicencia: (a: AutoridadElecta) => void
-  /**
-   * Registrar sus vacaciones descuenta días del saldo, y eso pide además
-   * `aprobar-vacaciones`: sin preguntarlo, la opción saldría para quien el
-   * servidor va a rechazar (fase 4.1d).
-   */
-  puedeRegistrarVacaciones: boolean
   /** Las vacaciones que concede el Consejo, dentro de los mismos 60 días. */
   onVacaciones: (a: AutoridadElecta) => void
   /** El cese: renuncia, fallecimiento, revocatoria o remoción. */
@@ -126,7 +120,6 @@ export const getAutoridadElectaColumns = ({
   onVerActo,
   onReelegir,
   onLicencia,
-  puedeRegistrarVacaciones,
   onVacaciones,
   onCesar,
 }: Opciones): DataTableColumn<AutoridadElecta>[] => [
@@ -213,7 +206,7 @@ export const getAutoridadElectaColumns = ({
             onClick: () => onVacaciones(a),
             // Se puede registrar con una licencia en curso: son dos permisos
             // distintos, y lo que no cabe lo dicen los dos topes.
-            hidden: Boolean(a.cese) || !puedeRegistrarVacaciones || !puedePreparar(a.servidor.id),
+            hidden: Boolean(a.cese) || !puedePreparar(a.servidor.id),
           },
           {
             label: 'Registrar cesación',

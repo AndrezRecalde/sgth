@@ -240,6 +240,10 @@ enum SubtipoMovimientoPersonal: string
      * período (Art. 52 núm. 1)—. La revocatoria y la remoción sí tienen la suya
      * y no pasan por aquí.
      *
+     * **Procuraduría Síndica confirmó la cita el 2026-11-27.** Se leyó del
+     * texto del COOTAD, no de memoria, y se mandó a confirmar justamente
+     * porque sale impresa en la constancia que firma Talento Humano.
+     *
      * @return array<string, string>
      */
     public function baseLegalPorNombramiento(): array

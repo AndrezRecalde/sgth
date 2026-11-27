@@ -78,6 +78,12 @@ enum Permiso: string
     case REGISTRAR_ACCION_PERSONAL = 'registrar-accion-personal';
     case NOTIFICAR_ACCION_PERSONAL = 'notificar-accion-personal';
     case ANULAR_ACCION_PERSONAL = 'anular-accion-personal';
+    // Los actos del Prefecto y del Viceprefecto, que no son acciones de
+    // personal: nacen de la credencial del CNE o de una resolución del Consejo
+    // (decisión D3, 2026-11-27). Lo tienen admin-uath y asistente-uath, los
+    // mismos de antes; separarlo es lo que permite quitárselo a uno sin
+    // quitarle el resto de las acciones.
+    case REGISTRAR_ACTO_AUTORIDAD = 'registrar-acto-autoridad';
     // Corregir a mano la fecha de ingreso a la institución, que desde la fase
     // 1.5 sale de la historia de vínculos. Para errores de la carga inicial;
     // el cambio queda en el registro de auditoría de la ficha.

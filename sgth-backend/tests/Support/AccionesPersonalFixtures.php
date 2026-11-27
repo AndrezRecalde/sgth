@@ -12,6 +12,9 @@
 function permisosDeAccionesPersonal(): void
 {
     (require database_path('migrations/2026_10_09_120000_crear_permisos_acciones_personal.php'))->up();
+    // Y el de los actos del Prefecto y del Viceprefecto, que desde D3
+    // (2026-11-27) va aparte y lo tienen los mismos dos roles.
+    (require database_path('migrations/2027_01_04_000000_crear_permiso_registrar_acto_autoridad.php'))->up();
 }
 
 /**
